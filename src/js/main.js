@@ -40,6 +40,10 @@ const modalOverlay = document.querySelector(".modal-overlay");
 const modalConfirmButton = document.querySelector(".modal-confirm-btn");
 const modalCancelButton = document.querySelector(".modal-cancel-btn");
 
+const searchForm = document.querySelector(".header-search");
+const searchInput = document.querySelector("#search-input");
+const mobileSearchButton = document.querySelector(".mobile-search-btn");
+
 // --- App state -------------------------------------------------------------
 // The app's notes live in this one array for as long as the page is open.
 // Every change (create, edit, delete, archive) updates this array first,
@@ -61,6 +65,9 @@ let showingArchived = false;
 
 // The tag currently being filtered by, or null if no tag filter is active.
 let activeTag = null;
+
+// The current search box text. An empty string means "not searching".
+let searchQuery = "";
 
 // Which note is currently shown in the detail panel. Starts as the first
 // visible note, or null if there are no notes at all.
@@ -100,9 +107,15 @@ function getSelectedNote() {
   return notes.find((note) => note.id === selectedNoteId) || null;
 }
 
-// Only the notes matching the current "All Notes" / "Archived Notes" view
-// and the active tag filter (if any) should appear in the list.
+// Only the notes matching the current view should appear in the list.
+// Searching looks across every note (active and archived together) and
+// takes over from the "All Notes" / "Archived Notes" / tag filter views,
+// matching the design: a search is its own view, not layered on top.
 function getVisibleNotes() {
+  if (searchQuery !== "") {
+    return noteManager.searchNotes(notes, searchQuery);
+  }
+
   const notesInCurrentView = notes.filter((note) => note.archived === showingArchived);
   if (activeTag === null) {
     return notesInCurrentView;
@@ -111,27 +124,37 @@ function getVisibleNotes() {
 }
 
 function getPanelTitle() {
+  if (searchQuery !== "") {
+    return `Showing results for: ${searchQuery}`;
+  }
   if (activeTag !== null) {
     return `Notes Tagged: ${activeTag}`;
   }
   return showingArchived ? "Archived Notes" : "All Notes";
 }
 
+function getEmptyMessage() {
+  if (searchQuery !== "") {
+    return "No notes match your search. Try a different keyword or create a new note.";
+  }
+  if (showingArchived) {
+    return "No notes have been archived yet. Move notes here for safekeeping, or create a new note.";
+  }
+  return "You don't have any notes yet. Start a new note to capture your thoughts and ideas.";
+}
+
 function renderApp() {
   const visibleNotes = getVisibleNotes();
-  const emptyMessage = showingArchived
-    ? "No notes have been archived yet. Move notes here for safekeeping, or create a new note."
-    : "You don't have any notes yet. Start a new note to capture your thoughts and ideas.";
 
   ui.setPanelTitle(getPanelTitle());
-  // A tag filter is a view of its own, so neither "All Notes" nor
-  // "Archived Notes" should show as active in the nav while it's applied.
-  if (activeTag === null) {
+  // A search or tag filter is a view of its own, so neither "All Notes"
+  // nor "Archived Notes" should show as active in the nav while applied.
+  if (searchQuery === "" && activeTag === null) {
     ui.setActiveNav(showingArchived ? "archived" : "all");
   } else {
     ui.setActiveNav(null);
   }
-  ui.renderAllNotes(visibleNotes, selectedNoteId, emptyMessage);
+  ui.renderAllNotes(visibleNotes, selectedNoteId, getEmptyMessage());
   ui.renderNoteDetail(getSelectedNote());
   ui.renderTagList(noteManager.getUniqueTags(notes), activeTag);
   updateSaveButtonState();
@@ -140,13 +163,22 @@ function renderApp() {
 function showNotesView() {
   document.body.dataset.appView = "notes";
   document.body.dataset.mobileView = "list";
+  document.body.dataset.mobileSearch = "closed";
 }
 
 function showSettingsView() {
   document.body.dataset.appView = "settings";
 }
 
+// Clears the search box itself (not just the searchQuery state) so the
+// three nav actions below always leave the app in a consistent state.
+function clearSearch() {
+  searchQuery = "";
+  searchInput.value = "";
+}
+
 function showAllNotes() {
+  clearSearch();
   showingArchived = false;
   activeTag = null;
   const visibleNotes = getVisibleNotes();
@@ -156,6 +188,7 @@ function showAllNotes() {
 }
 
 function showArchivedNotes() {
+  clearSearch();
   showingArchived = true;
   activeTag = null;
   const visibleNotes = getVisibleNotes();
@@ -165,12 +198,26 @@ function showArchivedNotes() {
 }
 
 function showTagFilter(tag) {
+  clearSearch();
   showingArchived = false;
   activeTag = tag;
   const visibleNotes = getVisibleNotes();
   selectedNoteId = visibleNotes.length > 0 ? visibleNotes[0].id : null;
   renderApp();
   showNotesView();
+}
+
+function handleSearchInput() {
+  searchQuery = searchInput.value.trim();
+  const visibleNotes = getVisibleNotes();
+  selectedNoteId = visibleNotes.length > 0 ? visibleNotes[0].id : null;
+  renderApp();
+}
+
+function openMobileSearch() {
+  document.body.dataset.appView = "notes";
+  document.body.dataset.mobileSearch = "open";
+  searchInput.focus();
 }
 
 // --- Create / save / cancel note ----------------------------------------
@@ -402,6 +449,17 @@ tagList.addEventListener("click", (event) => {
 
   event.preventDefault();
   showTagFilter(clickedLink.dataset.tag);
+});
+
+searchForm.addEventListener("submit", (event) => {
+  event.preventDefault(); // search happens live as you type; Enter shouldn't reload the page
+});
+
+searchInput.addEventListener("input", handleSearchInput);
+
+mobileSearchButton.addEventListener("click", (event) => {
+  event.preventDefault();
+  openMobileSearch();
 });
 
 createNoteButton.addEventListener("click", createNewNote);

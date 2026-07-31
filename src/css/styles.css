@@ -122,6 +122,12 @@ body {
   margin-left: auto;
 }
 
+/* On mobile, tapping the bottom nav's Search icon reveals this same
+   input instead of building a separate mobile search screen. */
+[data-mobile-search="open"] .header-search {
+  display: block;
+}
+
 .header-search input {
   width: 100%;
   padding: 8px 14px;

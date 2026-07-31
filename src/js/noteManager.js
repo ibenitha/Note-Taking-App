@@ -49,6 +49,21 @@ export function updateArchivedStatus(notes, id, isArchived) {
   }
 }
 
+// Returns notes whose title, content, or any tag contains the query text
+// (case-insensitive). Searches every note regardless of archived status,
+// since the assignment treats search as its own view, not a filter on
+// top of "All Notes" / "Archived Notes".
+export function searchNotes(notes, query) {
+  const lowerCaseQuery = query.toLowerCase();
+
+  return notes.filter((note) => {
+    const titleMatches = note.title.toLowerCase().includes(lowerCaseQuery);
+    const contentMatches = note.content.toLowerCase().includes(lowerCaseQuery);
+    const tagMatches = note.tags.some((tag) => tag.toLowerCase().includes(lowerCaseQuery));
+    return titleMatches || contentMatches || tagMatches;
+  });
+}
+
 // Returns only the notes that have the given tag.
 export function filterByTag(notes, tag) {
   return notes.filter((note) => note.tags.includes(tag));
