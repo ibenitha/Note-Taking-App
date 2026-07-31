@@ -52,6 +52,69 @@ function createNoteCard(note, selectedNoteId) {
   return listItem;
 }
 
+// The tag icon is the same small outline for every tag, so its path data
+// is kept here once instead of being duplicated in every generated link.
+const TAG_ICON_PATH = "M20.59 13.41L11 3.83V3H3v8h.83l9.58 9.59a2 2 0 0 0 2.83 0l4.35-4.35a2 2 0 0 0 0-2.83z";
+
+function createTagIcon() {
+  const svgNamespace = "http://www.w3.org/2000/svg";
+  const svg = document.createElementNS(svgNamespace, "svg");
+  svg.setAttribute("width", "20");
+  svg.setAttribute("height", "20");
+  svg.setAttribute("viewBox", "0 0 24 24");
+  svg.setAttribute("fill", "none");
+  svg.setAttribute("stroke", "currentColor");
+  svg.setAttribute("stroke-width", "1.5");
+  svg.setAttribute("stroke-linecap", "round");
+  svg.setAttribute("stroke-linejoin", "round");
+  svg.setAttribute("aria-hidden", "true");
+
+  const path = document.createElementNS(svgNamespace, "path");
+  path.setAttribute("d", TAG_ICON_PATH);
+
+  const dot = document.createElementNS(svgNamespace, "circle");
+  dot.setAttribute("cx", "6.5");
+  dot.setAttribute("cy", "6.5");
+  dot.setAttribute("r", "1.5");
+
+  svg.append(path, dot);
+  return svg;
+}
+
+// Renders the sidebar's tag list from whatever tags currently exist on
+// the notes, highlighting the tag being filtered by (if any).
+export function renderTagList(tags, activeTag) {
+  const tagList = document.querySelector(".tag-list");
+  tagList.innerHTML = "";
+
+  if (tags.length === 0) {
+    const message = document.createElement("li");
+    message.className = "empty-state";
+    message.textContent = "Tags you add to notes will show up here.";
+    tagList.appendChild(message);
+    return;
+  }
+
+  tags.forEach((tag) => {
+    const listItem = document.createElement("li");
+
+    const link = document.createElement("a");
+    link.href = "#";
+    link.className = "tag-link";
+    link.dataset.tag = tag;
+    if (tag === activeTag) {
+      link.classList.add("is-active");
+    }
+
+    const label = document.createElement("span");
+    label.textContent = tag;
+
+    link.append(createTagIcon(), label);
+    listItem.appendChild(link);
+    tagList.appendChild(listItem);
+  });
+}
+
 // Renders the given notes into the notes list, replacing whatever was
 // there before. Pass the id of the currently open note so its card can
 // be highlighted, and the message to show if the list is empty (the

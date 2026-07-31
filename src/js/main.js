@@ -14,6 +14,7 @@ import * as ui from "./ui.js";
 
 const notesList = document.querySelector(".notes-list");
 const backButton = document.querySelector(".back-btn");
+const tagList = document.querySelector(".tag-list");
 
 const settingsButton = document.querySelector(".settings-btn");
 const settingsNavButton = document.querySelector(".settings-nav-btn");
@@ -58,6 +59,9 @@ if (notes === null) {
 // links just flip this and re-render.
 let showingArchived = false;
 
+// The tag currently being filtered by, or null if no tag filter is active.
+let activeTag = null;
+
 // Which note is currently shown in the detail panel. Starts as the first
 // visible note, or null if there are no notes at all.
 let selectedNoteId = notes.length > 0 ? notes[0].id : null;
@@ -97,9 +101,20 @@ function getSelectedNote() {
 }
 
 // Only the notes matching the current "All Notes" / "Archived Notes" view
-// should appear in the list.
+// and the active tag filter (if any) should appear in the list.
 function getVisibleNotes() {
-  return notes.filter((note) => note.archived === showingArchived);
+  const notesInCurrentView = notes.filter((note) => note.archived === showingArchived);
+  if (activeTag === null) {
+    return notesInCurrentView;
+  }
+  return noteManager.filterByTag(notesInCurrentView, activeTag);
+}
+
+function getPanelTitle() {
+  if (activeTag !== null) {
+    return `Notes Tagged: ${activeTag}`;
+  }
+  return showingArchived ? "Archived Notes" : "All Notes";
 }
 
 function renderApp() {
@@ -108,10 +123,17 @@ function renderApp() {
     ? "No notes have been archived yet. Move notes here for safekeeping, or create a new note."
     : "You don't have any notes yet. Start a new note to capture your thoughts and ideas.";
 
-  ui.setPanelTitle(showingArchived ? "Archived Notes" : "All Notes");
-  ui.setActiveNav(showingArchived ? "archived" : "all");
+  ui.setPanelTitle(getPanelTitle());
+  // A tag filter is a view of its own, so neither "All Notes" nor
+  // "Archived Notes" should show as active in the nav while it's applied.
+  if (activeTag === null) {
+    ui.setActiveNav(showingArchived ? "archived" : "all");
+  } else {
+    ui.setActiveNav(null);
+  }
   ui.renderAllNotes(visibleNotes, selectedNoteId, emptyMessage);
   ui.renderNoteDetail(getSelectedNote());
+  ui.renderTagList(noteManager.getUniqueTags(notes), activeTag);
   updateSaveButtonState();
 }
 
@@ -126,6 +148,7 @@ function showSettingsView() {
 
 function showAllNotes() {
   showingArchived = false;
+  activeTag = null;
   const visibleNotes = getVisibleNotes();
   selectedNoteId = visibleNotes.length > 0 ? visibleNotes[0].id : null;
   renderApp();
@@ -134,6 +157,16 @@ function showAllNotes() {
 
 function showArchivedNotes() {
   showingArchived = true;
+  activeTag = null;
+  const visibleNotes = getVisibleNotes();
+  selectedNoteId = visibleNotes.length > 0 ? visibleNotes[0].id : null;
+  renderApp();
+  showNotesView();
+}
+
+function showTagFilter(tag) {
+  showingArchived = false;
+  activeTag = tag;
   const visibleNotes = getVisibleNotes();
   selectedNoteId = visibleNotes.length > 0 ? visibleNotes[0].id : null;
   renderApp();
@@ -359,6 +392,16 @@ notesList.addEventListener("click", (event) => {
 
 backButton.addEventListener("click", () => {
   document.body.dataset.mobileView = "list";
+});
+
+// Same event delegation pattern as the notes list: one listener on the
+// <ul> handles clicks on any tag link, however many tags there are.
+tagList.addEventListener("click", (event) => {
+  const clickedLink = event.target.closest(".tag-link");
+  if (!clickedLink) return;
+
+  event.preventDefault();
+  showTagFilter(clickedLink.dataset.tag);
 });
 
 createNoteButton.addEventListener("click", createNewNote);

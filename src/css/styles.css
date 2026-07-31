@@ -281,6 +281,11 @@ body {
   background: var(--color-surface-secondary);
 }
 
+.tag-link.is-active {
+  background: var(--color-surface-secondary);
+  color: var(--color-primary);
+}
+
 /* ==========================================================================
    6. Notes list panel
    ========================================================================== */

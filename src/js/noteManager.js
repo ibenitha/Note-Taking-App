@@ -49,6 +49,21 @@ export function updateArchivedStatus(notes, id, isArchived) {
   }
 }
 
+// Returns only the notes that have the given tag.
+export function filterByTag(notes, tag) {
+  return notes.filter((note) => note.tags.includes(tag));
+}
+
+// Returns every tag used by any note, alphabetically sorted, with no
+// duplicates. A Set automatically drops duplicates as tags are added to it.
+export function getUniqueTags(notes) {
+  const tagSet = new Set();
+  notes.forEach((note) => {
+    note.tags.forEach((tag) => tagSet.add(tag));
+  });
+  return Array.from(tagSet).sort();
+}
+
 // Sample notes used only the very first time the app runs, before the
 // user has saved anything to localStorage. This lets the app demonstrate
 // its features immediately instead of starting on an empty list.
