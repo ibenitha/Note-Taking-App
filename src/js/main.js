@@ -30,6 +30,7 @@ const cancelButtons = document.querySelectorAll(".cancel-btn");
 const titleInput = document.querySelector('[data-field="title"]');
 const tagsInput = document.querySelector('[data-field="tags"]');
 const contentInput = document.querySelector('[data-field="content"]');
+const submitButtons = noteForm.querySelectorAll('[type="submit"]');
 
 // --- App state -------------------------------------------------------------
 // The app's notes live in this one array for as long as the page is open.
@@ -63,6 +64,7 @@ function getSelectedNote() {
 function renderApp() {
   ui.renderAllNotes(notes, selectedNoteId);
   ui.renderNoteDetail(getSelectedNote());
+  updateSaveButtonState();
 }
 
 function showNotesView() {
@@ -98,7 +100,46 @@ function createNewNote() {
   titleInput.focus();
 }
 
+// --- Validation ----------------------------------------------------------
+// The only required field is the title. Validation runs on blur (so the
+// user sees the error as soon as they leave the field) and again on
+// submit (so it can never be skipped).
+
+function isTitleValid() {
+  return titleInput.value.trim().length > 0;
+}
+
+function validateTitle() {
+  if (isTitleValid()) {
+    ui.clearValidationError();
+    return true;
+  }
+  ui.showValidationError("Title is required.");
+  return false;
+}
+
+function updateSaveButtonState() {
+  const disabled = !isTitleValid();
+  submitButtons.forEach((button) => {
+    button.disabled = disabled;
+  });
+}
+
+// While the user is typing, clear the error as soon as it becomes valid
+// again, instead of making them wait until they blur the field.
+function handleTitleInput() {
+  updateSaveButtonState();
+  if (isTitleValid()) {
+    ui.clearValidationError();
+  }
+}
+
 function saveSelectedNote() {
+  if (!validateTitle()) {
+    titleInput.focus();
+    return;
+  }
+
   const note = getSelectedNote();
   if (!note) return;
 
@@ -110,6 +151,7 @@ function saveSelectedNote() {
   unsavedNewNoteId = null;
   storage.saveNotes(notes);
   renderApp();
+  ui.showToast("Note saved!");
 }
 
 function cancelEditingSelectedNote() {
@@ -158,6 +200,9 @@ noteForm.addEventListener("submit", (event) => {
 cancelButtons.forEach((button) => {
   button.addEventListener("click", cancelEditingSelectedNote);
 });
+
+titleInput.addEventListener("blur", validateTitle);
+titleInput.addEventListener("input", handleTitleInput);
 
 // Settings is a second top-level view. Switching between "notes" and
 // "settings" just changes an attribute on <body>; styles.css decides what

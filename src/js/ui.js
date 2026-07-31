@@ -85,6 +85,8 @@ export function renderNoteDetail(note) {
   const lastEditedField = document.querySelector('[data-field="last-edited"]');
   const contentField = document.querySelector('[data-field="content"]');
 
+  clearValidationError();
+
   if (note === null) {
     titleField.value = "";
     tagsField.value = "";
@@ -97,6 +99,46 @@ export function renderNoteDetail(note) {
   tagsField.value = note.tags.join(", ");
   lastEditedField.textContent = formatDate(note.timestamp);
   contentField.value = note.content;
+}
+
+// --- Validation feedback -------------------------------------------------
+// Only the title field is validated (it is the assignment's one required
+// field), so these functions work with that specific field and its error
+// message element rather than taking them as parameters every time.
+
+export function showValidationError(message) {
+  const titleField = document.querySelector('[data-field="title"]');
+  const errorText = document.querySelector("#title-error");
+
+  titleField.classList.add("has-error");
+  errorText.textContent = message;
+}
+
+export function clearValidationError() {
+  const titleField = document.querySelector('[data-field="title"]');
+  const errorText = document.querySelector("#title-error");
+
+  titleField.classList.remove("has-error");
+  errorText.textContent = "";
+}
+
+// --- Toast feedback --------------------------------------------------------
+
+let toastTimeoutId = null;
+
+// Shows a brief success message, then hides it again after a couple of
+// seconds. Calling this again while a toast is already showing restarts
+// the timer instead of stacking messages.
+export function showToast(message) {
+  const toast = document.querySelector(".toast");
+
+  toast.textContent = message;
+  toast.hidden = false;
+
+  clearTimeout(toastTimeoutId);
+  toastTimeoutId = setTimeout(() => {
+    toast.hidden = true;
+  }, 2500);
 }
 
 // Splits the tags input's comma-separated text into a clean array of tags,

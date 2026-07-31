@@ -420,8 +420,42 @@ body {
   letter-spacing: -0.5px;
   line-height: 1.2;
   color: var(--color-text);
-  margin: 0 0 16px;
+  margin: 0 0 4px;
   padding: 0;
+}
+
+.note-title-input.has-error {
+  outline: 2px solid var(--color-danger);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+.field-error {
+  margin: 0 0 12px;
+  font-size: 13px;
+  color: var(--color-danger);
+}
+
+.field-error:empty {
+  display: none;
+}
+
+.toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 10px 20px;
+  background: var(--color-text);
+  color: var(--color-bg);
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  box-shadow: 0 10px 30px rgba(14, 18, 27, 0.25);
+  z-index: 200;
+}
+
+.toast[hidden] {
+  display: none;
 }
 
 .note-meta {

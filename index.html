@@ -127,7 +127,8 @@
       </div>
 
       <label class="visually-hidden" for="note-title-input">Note title</label>
-      <input type="text" id="note-title-input" class="note-title-input" data-field="title" placeholder="Enter a title..." />
+      <input type="text" id="note-title-input" class="note-title-input" data-field="title" placeholder="Enter a title..." aria-describedby="title-error" required />
+      <p class="field-error" id="title-error" role="alert"></p>
 
       <div class="note-meta">
         <div class="meta-row">
@@ -282,6 +283,10 @@
   </nav>
 
   <button type="button" class="fab" aria-label="Create new note">+</button>
+
+  <!-- Brief success feedback after an action like saving a note.
+       aria-live announces the message to screen readers as soon as it changes. -->
+  <p class="toast" aria-live="polite" hidden></p>
 
   <script type="module" src="src/js/main.js"></script>
 </body>
