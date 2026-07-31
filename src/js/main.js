@@ -19,6 +19,7 @@ const settingsButton = document.querySelector(".settings-btn");
 const settingsNavButton = document.querySelector(".settings-nav-btn");
 const homeNavButton = document.querySelector(".home-nav-btn");
 const allNotesLink = document.querySelector(".all-notes-link");
+const archivedNotesLinks = document.querySelectorAll(".archived-notes-link");
 const settingsNav = document.querySelector(".settings-nav");
 const settingsSections = document.querySelectorAll(".settings-section");
 const settingsNavItems = document.querySelectorAll(".settings-nav-item");
@@ -33,6 +34,7 @@ const contentInput = document.querySelector('[data-field="content"]');
 const submitButtons = noteForm.querySelectorAll('[type="submit"]');
 
 const deleteButtons = document.querySelectorAll(".delete-btn");
+const archiveButtons = document.querySelectorAll(".archive-btn");
 const modalOverlay = document.querySelector(".modal-overlay");
 const modalConfirmButton = document.querySelector(".modal-confirm-btn");
 const modalCancelButton = document.querySelector(".modal-cancel-btn");
@@ -51,8 +53,13 @@ if (notes === null) {
   storage.saveNotes(notes);
 }
 
+// Whether the notes list is currently showing archived notes instead of
+// active ones. The sidebar/bottom-nav "All Notes" and "Archived Notes"
+// links just flip this and re-render.
+let showingArchived = false;
+
 // Which note is currently shown in the detail panel. Starts as the first
-// note, or null if there are no notes at all.
+// visible note, or null if there are no notes at all.
 let selectedNoteId = notes.length > 0 ? notes[0].id : null;
 
 // Tracks a note that was just created by clicking "+ Create New Note" but
@@ -89,8 +96,21 @@ function getSelectedNote() {
   return notes.find((note) => note.id === selectedNoteId) || null;
 }
 
+// Only the notes matching the current "All Notes" / "Archived Notes" view
+// should appear in the list.
+function getVisibleNotes() {
+  return notes.filter((note) => note.archived === showingArchived);
+}
+
 function renderApp() {
-  ui.renderAllNotes(notes, selectedNoteId);
+  const visibleNotes = getVisibleNotes();
+  const emptyMessage = showingArchived
+    ? "No notes have been archived yet. Move notes here for safekeeping, or create a new note."
+    : "You don't have any notes yet. Start a new note to capture your thoughts and ideas.";
+
+  ui.setPanelTitle(showingArchived ? "Archived Notes" : "All Notes");
+  ui.setActiveNav(showingArchived ? "archived" : "all");
+  ui.renderAllNotes(visibleNotes, selectedNoteId, emptyMessage);
   ui.renderNoteDetail(getSelectedNote());
   updateSaveButtonState();
 }
@@ -104,6 +124,22 @@ function showSettingsView() {
   document.body.dataset.appView = "settings";
 }
 
+function showAllNotes() {
+  showingArchived = false;
+  const visibleNotes = getVisibleNotes();
+  selectedNoteId = visibleNotes.length > 0 ? visibleNotes[0].id : null;
+  renderApp();
+  showNotesView();
+}
+
+function showArchivedNotes() {
+  showingArchived = true;
+  const visibleNotes = getVisibleNotes();
+  selectedNoteId = visibleNotes.length > 0 ? visibleNotes[0].id : null;
+  renderApp();
+  showNotesView();
+}
+
 // --- Create / save / cancel note ----------------------------------------
 
 function discardUnsavedNewNote() {
@@ -111,13 +147,15 @@ function discardUnsavedNewNote() {
 
   noteManager.deleteNote(notes, unsavedNewNoteId);
   if (selectedNoteId === unsavedNewNoteId) {
-    selectedNoteId = notes.length > 0 ? notes[0].id : null;
+    const visibleNotes = getVisibleNotes();
+    selectedNoteId = visibleNotes.length > 0 ? visibleNotes[0].id : null;
   }
   unsavedNewNoteId = null;
 }
 
 function createNewNote() {
   discardUnsavedNewNote();
+  showingArchived = false; // a brand new note is never archived, so show the All Notes view
 
   const note = noteManager.createNote(notes, "", "", []);
   unsavedNewNoteId = note.id;
@@ -216,7 +254,8 @@ function deleteSelectedNote() {
   if (!selectedNoteId) return;
 
   noteManager.deleteNote(notes, selectedNoteId);
-  selectedNoteId = notes.length > 0 ? notes[0].id : null;
+  const visibleNotes = getVisibleNotes();
+  selectedNoteId = visibleNotes.length > 0 ? visibleNotes[0].id : null;
   storage.saveNotes(notes);
 
   renderApp();
@@ -234,6 +273,53 @@ function openDeleteConfirmation() {
     message: "Are you sure you want to permanently delete this note? This action cannot be undone.",
     confirmLabel: "Delete Note",
     isDangerous: true,
+  });
+}
+
+// --- Archive / restore note ------------------------------------------------
+// Archiving asks for confirmation (it moves the note out of the main list);
+// restoring is a quick, reversible action, so it happens immediately.
+
+function archiveSelectedNote() {
+  if (!selectedNoteId) return;
+
+  noteManager.updateArchivedStatus(notes, selectedNoteId, true);
+  const visibleNotes = getVisibleNotes();
+  selectedNoteId = visibleNotes.length > 0 ? visibleNotes[0].id : null;
+  storage.saveNotes(notes);
+
+  renderApp();
+  showNotesView();
+  ui.showToast("Note archived.");
+}
+
+function restoreSelectedNote() {
+  if (!selectedNoteId) return;
+
+  noteManager.updateArchivedStatus(notes, selectedNoteId, false);
+  const visibleNotes = getVisibleNotes();
+  selectedNoteId = visibleNotes.length > 0 ? visibleNotes[0].id : null;
+  storage.saveNotes(notes);
+
+  renderApp();
+  ui.showToast("Note restored.");
+}
+
+function handleArchiveButtonClick() {
+  const note = getSelectedNote();
+  if (!note) return;
+
+  if (note.archived) {
+    restoreSelectedNote();
+    return;
+  }
+
+  pendingConfirmAction = archiveSelectedNote;
+  ui.showModal({
+    title: "Archive Note",
+    message: "Are you sure you want to archive this note? You can find it in the Archived Notes section and restore it anytime.",
+    confirmLabel: "Archive Note",
+    isDangerous: false,
   });
 }
 
@@ -298,6 +384,10 @@ deleteButtons.forEach((button) => {
   button.addEventListener("click", openDeleteConfirmation);
 });
 
+archiveButtons.forEach((button) => {
+  button.addEventListener("click", handleArchiveButtonClick);
+});
+
 modalConfirmButton.addEventListener("click", () => {
   if (pendingConfirmAction) {
     pendingConfirmAction();
@@ -334,12 +424,19 @@ settingsNavButton.addEventListener("click", (event) => {
 
 homeNavButton.addEventListener("click", (event) => {
   event.preventDefault();
-  showNotesView();
+  showAllNotes();
 });
 
 allNotesLink.addEventListener("click", (event) => {
   event.preventDefault();
-  showNotesView();
+  showAllNotes();
+});
+
+archivedNotesLinks.forEach((link) => {
+  link.addEventListener("click", (event) => {
+    event.preventDefault();
+    showArchivedNotes();
+  });
 });
 
 // Inside Settings, clicking a nav item (Color Theme / Font Theme) shows

@@ -475,6 +475,10 @@ body {
   letter-spacing: -0.2px;
 }
 
+.meta-row[hidden] {
+  display: none;
+}
+
 .meta-icon {
   color: var(--color-text-secondary);
   flex-shrink: 0;

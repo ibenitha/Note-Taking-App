@@ -54,13 +54,14 @@ function createNoteCard(note, selectedNoteId) {
 
 // Renders the given notes into the notes list, replacing whatever was
 // there before. Pass the id of the currently open note so its card can
-// be highlighted.
-export function renderAllNotes(notes, selectedNoteId) {
+// be highlighted, and the message to show if the list is empty (the
+// wording is different for "All Notes" vs "Archived Notes").
+export function renderAllNotes(notes, selectedNoteId, emptyMessage) {
   const notesList = document.querySelector(".notes-list");
   notesList.innerHTML = "";
 
   if (notes.length === 0) {
-    showEmptyNotesMessage(notesList);
+    showEmptyNotesMessage(notesList, emptyMessage);
     return;
   }
 
@@ -69,11 +70,31 @@ export function renderAllNotes(notes, selectedNoteId) {
   });
 }
 
-function showEmptyNotesMessage(container) {
-  const message = document.createElement("li");
-  message.className = "empty-state";
-  message.textContent = "You don't have any notes yet. Start a new note to capture your thoughts and ideas.";
-  container.appendChild(message);
+function showEmptyNotesMessage(container, message) {
+  const messageItem = document.createElement("li");
+  messageItem.className = "empty-state";
+  messageItem.textContent = message;
+  container.appendChild(messageItem);
+}
+
+export function setPanelTitle(text) {
+  document.querySelector(".panel-title").textContent = text;
+}
+
+// Shows the nav link(s) matching the given view ("all" or "archived") as
+// active, and un-marks every other nav link. Both the sidebar and the
+// mobile bottom nav share the same data-nav-view attribute, so this
+// updates both at once.
+export function setActiveNav(viewName) {
+  document.querySelectorAll("[data-nav-view]").forEach((link) => {
+    const isActive = link.dataset.navView === viewName;
+    link.classList.toggle("is-active", isActive);
+    if (isActive) {
+      link.setAttribute("aria-current", "page");
+    } else {
+      link.removeAttribute("aria-current");
+    }
+  });
 }
 
 // Fills in the detail form with one note's data. Passing null clears the
@@ -84,6 +105,9 @@ export function renderNoteDetail(note) {
   const tagsField = document.querySelector('[data-field="tags"]');
   const lastEditedField = document.querySelector('[data-field="last-edited"]');
   const contentField = document.querySelector('[data-field="content"]');
+  const statusRow = document.querySelector(".status-row");
+  const archiveButtonLabels = document.querySelectorAll(".archive-btn-label");
+  const mobileArchiveButton = document.querySelector(".toolbar-actions .archive-btn");
 
   clearValidationError();
 
@@ -92,6 +116,7 @@ export function renderNoteDetail(note) {
     tagsField.value = "";
     lastEditedField.textContent = "Not yet saved";
     contentField.value = "";
+    statusRow.hidden = true;
     return;
   }
 
@@ -99,6 +124,12 @@ export function renderNoteDetail(note) {
   tagsField.value = note.tags.join(", ");
   lastEditedField.textContent = formatDate(note.timestamp);
   contentField.value = note.content;
+  statusRow.hidden = !note.archived;
+
+  archiveButtonLabels.forEach((label) => {
+    label.textContent = note.archived ? "Restore Note" : "Archive Note";
+  });
+  mobileArchiveButton.setAttribute("aria-label", note.archived ? "Restore note" : "Archive note");
 }
 
 // --- Validation feedback -------------------------------------------------

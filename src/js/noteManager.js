@@ -41,6 +41,14 @@ export function deleteNote(notes, id) {
   }
 }
 
+// Sets a note's archived flag to true (archive) or false (restore).
+export function updateArchivedStatus(notes, id, isArchived) {
+  const note = notes.find((note) => note.id === id);
+  if (note) {
+    note.archived = isArchived;
+  }
+}
+
 // Sample notes used only the very first time the app runs, before the
 // user has saved anything to localStorage. This lets the app demonstrate
 // its features immediately instead of starting on an empty list.
