@@ -32,6 +32,11 @@ const tagsInput = document.querySelector('[data-field="tags"]');
 const contentInput = document.querySelector('[data-field="content"]');
 const submitButtons = noteForm.querySelectorAll('[type="submit"]');
 
+const deleteButtons = document.querySelectorAll(".delete-btn");
+const modalOverlay = document.querySelector(".modal-overlay");
+const modalConfirmButton = document.querySelector(".modal-confirm-btn");
+const modalCancelButton = document.querySelector(".modal-cancel-btn");
+
 // --- App state -------------------------------------------------------------
 // The app's notes live in this one array for as long as the page is open.
 // Every change (create, edit, delete, archive) updates this array first,
@@ -54,6 +59,10 @@ let selectedNoteId = notes.length > 0 ? notes[0].id : null;
 // has not been saved yet. If the user cancels or navigates away without
 // saving, this note is removed instead of being kept as an empty note.
 let unsavedNewNoteId = null;
+
+// Holds the function to run if the user confirms the currently open
+// confirmation modal (delete, archive, ...). Null when no modal is open.
+let pendingConfirmAction = null;
 
 // If the user was mid-edit when they left or reloaded the page, sessionStorage
 // has a draft of what they were typing. Restore it now, before the first
@@ -196,6 +205,38 @@ function cancelEditingSelectedNote() {
   renderApp(); // re-fill the form from the saved note, discarding any typed edits
 }
 
+// --- Delete note -----------------------------------------------------------
+
+function closeConfirmationModal() {
+  pendingConfirmAction = null;
+  ui.hideModal();
+}
+
+function deleteSelectedNote() {
+  if (!selectedNoteId) return;
+
+  noteManager.deleteNote(notes, selectedNoteId);
+  selectedNoteId = notes.length > 0 ? notes[0].id : null;
+  storage.saveNotes(notes);
+
+  renderApp();
+  showNotesView(); // go back to the list view, since the deleted note's detail is gone
+  ui.showToast("Note deleted.");
+}
+
+function openDeleteConfirmation() {
+  const note = getSelectedNote();
+  if (!note) return;
+
+  pendingConfirmAction = deleteSelectedNote;
+  ui.showModal({
+    title: "Delete Note",
+    message: "Are you sure you want to permanently delete this note? This action cannot be undone.",
+    confirmLabel: "Delete Note",
+    isDangerous: true,
+  });
+}
+
 // --- Initial render ------------------------------------------------------
 
 renderApp();
@@ -252,6 +293,34 @@ titleInput.addEventListener("input", handleTitleInput);
 titleInput.addEventListener("input", saveDraftFromForm);
 tagsInput.addEventListener("input", saveDraftFromForm);
 contentInput.addEventListener("input", saveDraftFromForm);
+
+deleteButtons.forEach((button) => {
+  button.addEventListener("click", openDeleteConfirmation);
+});
+
+modalConfirmButton.addEventListener("click", () => {
+  if (pendingConfirmAction) {
+    pendingConfirmAction();
+  }
+  closeConfirmationModal();
+});
+
+modalCancelButton.addEventListener("click", closeConfirmationModal);
+
+// Clicking the dimmed backdrop (not the modal box itself) cancels, the
+// same as clicking the Cancel button.
+modalOverlay.addEventListener("click", (event) => {
+  if (event.target === modalOverlay) {
+    closeConfirmationModal();
+  }
+});
+
+// Escape cancels the modal, matching the assignment's keyboard requirement.
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && !modalOverlay.hidden) {
+    closeConfirmationModal();
+  }
+});
 
 // Settings is a second top-level view. Switching between "notes" and
 // "settings" just changes an attribute on <body>; styles.css decides what

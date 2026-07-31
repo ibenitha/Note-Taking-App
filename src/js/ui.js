@@ -141,6 +141,31 @@ export function showToast(message) {
   }, 2500);
 }
 
+// --- Confirmation modal ----------------------------------------------------
+// One modal element in the HTML is reused for every confirmation (delete,
+// archive, ...) instead of building a separate modal per action. Callers
+// pass in the text to show; main.js decides what happens if confirmed.
+
+export function showModal({ title, message, confirmLabel, isDangerous }) {
+  const overlay = document.querySelector(".modal-overlay");
+  const titleField = document.querySelector("#modal-title");
+  const messageField = document.querySelector("#modal-message");
+  const confirmButton = document.querySelector(".modal-confirm-btn");
+
+  titleField.textContent = title;
+  messageField.textContent = message;
+  confirmButton.textContent = confirmLabel;
+  confirmButton.classList.toggle("btn-danger", isDangerous);
+  confirmButton.classList.toggle("btn-primary", !isDangerous);
+
+  overlay.hidden = false;
+  confirmButton.focus();
+}
+
+export function hideModal() {
+  document.querySelector(".modal-overlay").hidden = true;
+}
+
 // Splits the tags input's comma-separated text into a clean array of tags,
 // e.g. "Work, Planning" -> ["Work", "Planning"]. Trims extra spaces and
 // drops empty entries (from things like a trailing comma).
