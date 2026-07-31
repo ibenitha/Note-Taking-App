@@ -41,6 +41,7 @@ const submitButtons = noteForm.querySelectorAll('[type="submit"]');
 
 const deleteButtons = document.querySelectorAll(".delete-btn");
 const archiveButtons = document.querySelectorAll(".archive-btn");
+const locationButton = document.querySelector(".location-btn");
 const modalOverlay = document.querySelector(".modal-overlay");
 const modalConfirmButton = document.querySelector(".modal-confirm-btn");
 const modalCancelButton = document.querySelector(".modal-cancel-btn");
@@ -481,6 +482,50 @@ function handleArchiveButtonClick() {
   });
 }
 
+// --- Geolocation (bonus) ---------------------------------------------------
+// Adding a location is reversible and low-risk, so it needs no confirmation
+// modal — just the browser's own native permission prompt.
+
+function handleLocationSuccess(position) {
+  const note = getSelectedNote();
+  if (!note) return;
+
+  note.location = {
+    latitude: position.coords.latitude,
+    longitude: position.coords.longitude,
+  };
+  storage.saveNotes(notes);
+  renderApp();
+  ui.showToast("Location added!");
+}
+
+function handleLocationError(error) {
+  if (error.code === error.PERMISSION_DENIED) {
+    ui.showToast("Location permission was denied.");
+  } else {
+    ui.showToast("Could not get your location.");
+  }
+}
+
+function handleLocationButtonClick() {
+  const note = getSelectedNote();
+  if (!note) return;
+
+  if (note.location !== null) {
+    note.location = null;
+    storage.saveNotes(notes);
+    renderApp();
+    return;
+  }
+
+  if (!("geolocation" in navigator)) {
+    ui.showToast("Geolocation is not supported in this browser.");
+    return;
+  }
+
+  navigator.geolocation.getCurrentPosition(handleLocationSuccess, handleLocationError);
+}
+
 // --- Initial render ------------------------------------------------------
 
 renderApp();
@@ -566,6 +611,8 @@ deleteButtons.forEach((button) => {
 archiveButtons.forEach((button) => {
   button.addEventListener("click", handleArchiveButtonClick);
 });
+
+locationButton.addEventListener("click", handleLocationButtonClick);
 
 modalConfirmButton.addEventListener("click", () => {
   if (pendingConfirmAction) {

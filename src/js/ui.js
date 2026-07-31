@@ -16,6 +16,12 @@ function formatDate(isoString) {
   return `${day} ${month} ${year}`;
 }
 
+// Rounds coordinates to 4 decimal places (about 11m of precision, plenty
+// for "where was I when I wrote this") and joins them into one string.
+function formatLocation(location) {
+  return `${location.latitude.toFixed(4)}, ${location.longitude.toFixed(4)}`;
+}
+
 // Builds one <li><button class="note-card">...</button></li> element for
 // the notes list, using document.createElement instead of innerHTML so
 // note titles/content can never be interpreted as HTML.
@@ -48,6 +54,14 @@ function createNoteCard(note, selectedNoteId) {
   date.textContent = formatDate(note.timestamp);
 
   card.append(title, tagPills, date);
+
+  if (note.location !== null) {
+    const locationBadge = document.createElement("span");
+    locationBadge.className = "location-badge";
+    locationBadge.textContent = `📍 ${formatLocation(note.location)}`;
+    card.appendChild(locationBadge);
+  }
+
   listItem.appendChild(card);
   return listItem;
 }
@@ -171,6 +185,9 @@ export function renderNoteDetail(note) {
   const statusRow = document.querySelector(".status-row");
   const archiveButtonLabels = document.querySelectorAll(".archive-btn-label");
   const mobileArchiveButton = document.querySelector(".toolbar-actions .archive-btn");
+  const locationRow = document.querySelector(".location-row");
+  const locationField = document.querySelector('[data-field="location"]');
+  const locationButton = document.querySelector(".location-btn");
 
   clearValidationError();
 
@@ -180,6 +197,8 @@ export function renderNoteDetail(note) {
     lastEditedField.textContent = "Not yet saved";
     contentField.value = "";
     statusRow.hidden = true;
+    locationRow.hidden = true;
+    locationButton.hidden = true;
     return;
   }
 
@@ -193,6 +212,16 @@ export function renderNoteDetail(note) {
     label.textContent = note.archived ? "Restore Note" : "Archive Note";
   });
   mobileArchiveButton.setAttribute("aria-label", note.archived ? "Restore note" : "Archive note");
+
+  locationButton.hidden = false;
+  if (note.location === null) {
+    locationRow.hidden = true;
+    locationButton.textContent = "+ Add Location";
+  } else {
+    locationRow.hidden = false;
+    locationField.textContent = formatLocation(note.location);
+    locationButton.textContent = "Remove Location";
+  }
 }
 
 // --- Validation feedback -------------------------------------------------
