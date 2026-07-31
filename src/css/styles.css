@@ -448,6 +448,11 @@ body {
   color: var(--color-text);
   margin: 0 0 4px;
   padding: 0;
+  /* A single-line <input> can't wrap onto a second line like the original
+     heading did; truncate with an ellipsis instead of clipping mid-letter. */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .note-title-input.has-error {

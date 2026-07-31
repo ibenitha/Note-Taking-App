@@ -372,11 +372,20 @@ function saveSelectedNote() {
 }
 
 function cancelEditingSelectedNote() {
-  if (selectedNoteId === unsavedNewNoteId) {
+  const wasUnsavedNewNote = selectedNoteId === unsavedNewNoteId;
+  if (wasUnsavedNewNote) {
     discardUnsavedNewNote();
   }
+
   storage.clearDraft();
   renderApp(); // re-fill the form from the saved note, discarding any typed edits
+
+  // A cancelled new note leaves nothing to show in its place, so return to
+  // the list (on mobile, staying on the detail view here would strand the
+  // user: it has no back button of its own outside of "Go Back").
+  if (wasUnsavedNewNote) {
+    showNotesView();
+  }
 }
 
 // --- Delete note -----------------------------------------------------------
