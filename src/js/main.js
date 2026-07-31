@@ -146,6 +146,11 @@ function getEmptyMessage() {
 function renderApp() {
   const visibleNotes = getVisibleNotes();
 
+  // renderAllNotes() replaces every note card with a new element, which
+  // would otherwise silently drop keyboard focus back to <body>. Note
+  // whether focus was in the list first, then restore it afterwards.
+  const focusWasInNotesList = notesList.contains(document.activeElement);
+
   ui.setPanelTitle(getPanelTitle());
   // A search or tag filter is a view of its own, so neither "All Notes"
   // nor "Archived Notes" should show as active in the nav while applied.
@@ -158,6 +163,13 @@ function renderApp() {
   ui.renderNoteDetail(getSelectedNote());
   ui.renderTagList(noteManager.getUniqueTags(notes), activeTag);
   updateSaveButtonState();
+
+  if (focusWasInNotesList) {
+    const activeCard = notesList.querySelector(".note-card.is-active");
+    if (activeCard) {
+      activeCard.focus();
+    }
+  }
 }
 
 function showNotesView() {
@@ -325,9 +337,24 @@ function cancelEditingSelectedNote() {
 
 // --- Delete note -----------------------------------------------------------
 
+// Remembers whatever had focus before a modal opened, so closing it
+// (however the user does that) returns focus there instead of losing it.
+let lastFocusedElementBeforeModal = null;
+
+function openConfirmModal(action, modalOptions) {
+  lastFocusedElementBeforeModal = document.activeElement;
+  pendingConfirmAction = action;
+  ui.showModal(modalOptions);
+}
+
 function closeConfirmationModal() {
   pendingConfirmAction = null;
   ui.hideModal();
+
+  if (lastFocusedElementBeforeModal) {
+    lastFocusedElementBeforeModal.focus();
+    lastFocusedElementBeforeModal = null;
+  }
 }
 
 function deleteSelectedNote() {
@@ -347,8 +374,7 @@ function openDeleteConfirmation() {
   const note = getSelectedNote();
   if (!note) return;
 
-  pendingConfirmAction = deleteSelectedNote;
-  ui.showModal({
+  openConfirmModal(deleteSelectedNote, {
     title: "Delete Note",
     message: "Are you sure you want to permanently delete this note? This action cannot be undone.",
     confirmLabel: "Delete Note",
@@ -394,8 +420,7 @@ function handleArchiveButtonClick() {
     return;
   }
 
-  pendingConfirmAction = archiveSelectedNote;
-  ui.showModal({
+  openConfirmModal(archiveSelectedNote, {
     title: "Archive Note",
     message: "Are you sure you want to archive this note? You can find it in the Archived Notes section and restore it anytime.",
     confirmLabel: "Archive Note",
@@ -506,10 +531,53 @@ modalOverlay.addEventListener("click", (event) => {
   }
 });
 
-// Escape cancels the modal, matching the assignment's keyboard requirement.
+// Escape closes the modal if one is open, otherwise cancels editing if
+// focus is inside the note form — matching the assignment's keyboard
+// requirement for both cases with a single listener.
 document.addEventListener("keydown", (event) => {
-  if (event.key === "Escape" && !modalOverlay.hidden) {
+  if (event.key !== "Escape") return;
+
+  if (!modalOverlay.hidden) {
     closeConfirmationModal();
+    return;
+  }
+
+  if (noteForm.contains(document.activeElement)) {
+    cancelEditingSelectedNote();
+  }
+});
+
+// While the modal is open, Tab should only cycle between its two buttons
+// instead of moving focus to whatever is behind it.
+modalOverlay.addEventListener("keydown", (event) => {
+  if (event.key !== "Tab") return;
+
+  const focusableElements = [modalCancelButton, modalConfirmButton];
+  const currentIndex = focusableElements.indexOf(document.activeElement);
+
+  event.preventDefault();
+  let nextIndex;
+  if (event.shiftKey) {
+    nextIndex = currentIndex <= 0 ? focusableElements.length - 1 : currentIndex - 1;
+  } else {
+    nextIndex = currentIndex === focusableElements.length - 1 ? 0 : currentIndex + 1;
+  }
+  focusableElements[nextIndex].focus();
+});
+
+// Bonus: Up/Down arrow keys move between note cards, in addition to Tab.
+notesList.addEventListener("keydown", (event) => {
+  if (event.key !== "ArrowDown" && event.key !== "ArrowUp") return;
+
+  const cards = Array.from(notesList.querySelectorAll(".note-card"));
+  const currentIndex = cards.indexOf(document.activeElement);
+  if (currentIndex === -1) return;
+
+  event.preventDefault();
+  const nextIndex = event.key === "ArrowDown" ? currentIndex + 1 : currentIndex - 1;
+  const nextCard = cards[nextIndex];
+  if (nextCard) {
+    nextCard.focus();
   }
 });
 

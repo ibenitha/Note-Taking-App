@@ -46,6 +46,18 @@ input {
   white-space: nowrap;
 }
 
+/* A single, consistent focus ring for every interactive element, since
+   several buttons/links reset their default browser styling elsewhere
+   in this file. :focus-visible only shows it for keyboard focus, not
+   for mouse clicks, matching how modern browsers style native controls. */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
 /* ==========================================================================
    2. Design tokens
    Values below come directly from the Figma Dev Mode CSS export (Desktop -
