@@ -1,0 +1,834 @@
+/* ==========================================================================
+   1. Reset & base
+   ========================================================================== */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}
+
+ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+input {
+  font: inherit;
+}
+
+/* Used on the search <label> so it stays available to screen readers without
+   taking up visual space next to the input's own placeholder text. */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+}
+
+/* ==========================================================================
+   2. Design tokens
+   Values below come directly from the Figma Dev Mode CSS export (Desktop -
+   All Notes - Light), not estimated from screenshots. These custom
+   properties are also the hook themes.js will later flip for dark mode.
+   ========================================================================== */
+
+:root {
+  --color-bg: #ffffff;
+  --color-surface: #ffffff;
+  --color-surface-secondary: #f3f5f8; /* active/selected item backgrounds, secondary buttons */
+  --color-text: #0e121b; /* titles, primary values, active nav text */
+  --color-text-secondary: #2b303b; /* icons, inactive nav text, labels, dates */
+  --color-text-muted: #717784; /* "Tags" sidebar section heading */
+  --color-text-toolbar: #525866; /* mobile toolbar: Go Back, Cancel, icons */
+  --color-body-text: #232530; /* note body paragraph text */
+  --color-border: #e0e4ea;
+  --color-tag-bg: #e0e4ea;
+  --color-primary: #335cff;
+  --color-primary-hover: #2947d1;
+  --color-danger: #e5484d;
+
+  --font-body: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-logo: "Pacifico", cursive;
+
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-full: 999px;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  font-family: var(--font-body);
+  color: var(--color-text);
+  background: var(--color-bg);
+}
+
+/* ==========================================================================
+   3. App header
+   ========================================================================== */
+
+.app-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-surface);
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--color-primary); /* tints the feather icon (SVG uses currentColor) */
+  flex-shrink: 0;
+}
+
+.logo-text {
+  font-family: var(--font-logo);
+  font-size: 23px;
+  letter-spacing: -0.02em;
+  color: var(--color-text);
+}
+
+.header-search {
+  display: none; /* shown on desktop, see media query */
+  flex: 1;
+  max-width: 420px;
+  margin-left: auto;
+}
+
+.header-search input {
+  width: 100%;
+  padding: 8px 14px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+/* .icon-btn (defined below) also sets display, so this needs the extra
+   class to win the specificity tie regardless of source order. */
+.settings-btn.icon-btn {
+  display: none; /* shown on desktop, see media query */
+}
+
+.icon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-sm);
+  color: var(--color-text-secondary);
+}
+
+.icon-btn:hover {
+  background: var(--color-surface-secondary);
+}
+
+/* ==========================================================================
+   4. App body layout
+   Mobile-first: only one of notes-list-panel / note-detail-panel is visible
+   at a time, controlled by the data-mobile-view attribute (see main.js).
+   The desktop media query below turns this into a 4-column grid where
+   everything is visible at once, and data-mobile-view stops mattering.
+   ========================================================================== */
+
+.app-body {
+  padding-bottom: 72px; /* leaves room for the fixed bottom nav on mobile */
+}
+
+.sidebar,
+.note-actions-panel,
+.note-detail-footer {
+  display: none; /* desktop-only elements, see media query */
+}
+
+/* .btn (defined later) also sets display, so this needs the extra class
+   to win the specificity tie regardless of source order. */
+.create-note-btn.btn {
+  display: none;
+}
+
+.notes-list-panel,
+.note-detail-panel {
+  padding: 20px;
+}
+
+[data-mobile-view="detail"] .notes-list-panel {
+  display: none;
+}
+
+[data-mobile-view="list"] .note-detail-panel {
+  display: none;
+}
+
+/* The note detail view is a full-screen page on mobile, so the bottom nav
+   and FAB (which belong to the list/home view) hide while it's open. */
+[data-mobile-view="detail"] .bottom-nav,
+[data-mobile-view="detail"] .fab {
+  display: none;
+}
+
+/* ==========================================================================
+   5. Sidebar (desktop)
+   ========================================================================== */
+
+.sidebar {
+  flex-direction: column;
+  padding: 12px 16px;
+  gap: 16px;
+  border-right: 1px solid var(--color-border);
+}
+
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 16px;
+}
+
+.sidebar-link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  font-weight: 500;
+  font-size: 14px;
+  letter-spacing: -0.2px;
+  color: var(--color-text-secondary);
+}
+
+.sidebar-link svg {
+  flex-shrink: 0;
+}
+
+.sidebar-link:hover {
+  background: var(--color-surface-secondary);
+}
+
+.sidebar-link.is-active {
+  background: var(--color-surface-secondary);
+  color: var(--color-text);
+}
+
+.sidebar-link.is-active svg:first-child {
+  color: var(--color-primary); /* active nav icon is tinted blue, per Figma */
+}
+
+/* The label text grows to fill the row, so a trailing chevron (if any)
+   lands at the far right edge instead of right after the text. */
+.sidebar-link span,
+.tag-link span {
+  flex: 1;
+}
+
+.sidebar-heading {
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: -0.2px;
+  color: var(--color-text-muted);
+  margin: 0 0 8px;
+}
+
+.tag-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.tag-link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: -0.2px;
+  color: var(--color-text-secondary);
+}
+
+.tag-link svg {
+  flex-shrink: 0;
+}
+
+.tag-link:hover {
+  background: var(--color-surface-secondary);
+}
+
+/* ==========================================================================
+   6. Notes list panel
+   ========================================================================== */
+
+.panel-title {
+  font-size: 1.6rem;
+  margin: 0 0 16px;
+}
+
+.create-note-btn {
+  width: 100%;
+  margin-bottom: 16px;
+}
+
+.notes-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.note-card {
+  width: 100%;
+  text-align: left;
+  padding: 8px;
+  border-radius: var(--radius-sm);
+}
+
+.note-card:not(:last-child) {
+  border-bottom: 1px solid var(--color-border);
+}
+
+.note-card:hover,
+.note-card.is-active {
+  background: var(--color-surface-secondary);
+}
+
+/* An active note card's own background already separates it from its
+   neighbor, so Figma drops the divider line only in that case. */
+.note-card.is-active {
+  border-bottom-color: transparent;
+}
+
+.note-card-title {
+  margin: 0 0 12px;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.3px;
+  color: var(--color-text);
+}
+
+.tag-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 12px;
+}
+
+.tag-pill {
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: var(--color-tag-bg);
+  color: var(--color-text);
+  font-size: 12px;
+  letter-spacing: -0.2px;
+}
+
+.note-card-date {
+  display: block;
+  font-size: 12px;
+  letter-spacing: -0.2px;
+  color: var(--color-text-secondary);
+}
+
+/* ==========================================================================
+   7. Note detail panel
+   ========================================================================== */
+
+.note-detail-mobile-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding-bottom: 14px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.back-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 14px;
+  letter-spacing: -0.2px;
+  color: var(--color-text-toolbar);
+}
+
+.toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.toolbar-actions .icon-btn {
+  width: 28px;
+  height: 28px;
+  color: var(--color-text-toolbar);
+}
+
+.text-btn {
+  padding: 6px 10px;
+  font-size: 14px;
+  font-weight: 400;
+  letter-spacing: -0.2px;
+  color: var(--color-text-toolbar);
+}
+
+.text-btn--primary {
+  color: var(--color-primary);
+}
+
+.note-title-input {
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  line-height: 1.2;
+  color: var(--color-text);
+  margin: 0 0 16px;
+}
+
+.note-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-bottom: 16px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.meta-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  letter-spacing: -0.2px;
+}
+
+.meta-icon {
+  color: var(--color-text-secondary);
+  flex-shrink: 0;
+}
+
+.meta-label {
+  color: var(--color-text-secondary);
+  min-width: 90px;
+}
+
+/* The "Tags" value reads darker/emphasized than the "Last edited" value in
+   the Figma export (#0E121B vs #2B303B) even though the labels match. */
+.meta-value {
+  color: var(--color-text-secondary);
+}
+
+.meta-value--strong {
+  color: var(--color-text);
+}
+
+.note-body-input {
+  width: 100%;
+  min-height: 320px;
+  border: none;
+  resize: none;
+  font-family: inherit;
+  font-size: 14px;
+  letter-spacing: -0.2px;
+  line-height: 1.3;
+  color: var(--color-body-text);
+  white-space: pre-wrap;
+}
+
+.note-detail-footer {
+  gap: 16px;
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid var(--color-border);
+}
+
+/* ==========================================================================
+   8. Note actions panel (desktop)
+   ========================================================================== */
+
+.note-actions-panel {
+  flex-direction: column;
+  gap: 10px;
+  padding: 20px;
+}
+
+/* ==========================================================================
+   9. Buttons
+   ========================================================================== */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 16px;
+  border-radius: var(--radius-md);
+  font-weight: 500;
+  font-size: 14px;
+  letter-spacing: -0.2px;
+  border: 1px solid transparent;
+}
+
+.btn-primary {
+  background: var(--color-primary);
+  color: #ffffff;
+}
+
+.btn-primary:hover {
+  background: var(--color-primary-hover);
+}
+
+.btn-secondary {
+  background: var(--color-surface-secondary);
+  color: var(--color-text-toolbar);
+}
+
+.btn-outline {
+  border-color: var(--color-border);
+  color: var(--color-text);
+}
+
+.btn-danger-outline {
+  border-color: var(--color-border);
+  color: var(--color-danger);
+}
+
+/* ==========================================================================
+   10. Bottom nav & FAB (mobile)
+   ========================================================================== */
+
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: space-around;
+  padding: 8px 0;
+  background: var(--color-surface);
+  border-top: 1px solid var(--color-border);
+}
+
+.bottom-nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  font-size: 0.7rem;
+  color: var(--color-text-secondary);
+  padding: 4px 10px;
+}
+
+.bottom-nav-item.is-active {
+  color: var(--color-primary);
+}
+
+.fab {
+  position: fixed;
+  right: 20px;
+  bottom: 84px;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  color: #ffffff;
+  font-size: 1.6rem;
+  line-height: 1;
+  box-shadow: 0 4px 12px rgba(51, 92, 255, 0.4);
+}
+
+/* ==========================================================================
+   11. Desktop layout
+   ========================================================================== */
+
+@media (min-width: 900px) {
+  .header-search {
+    display: block;
+  }
+
+  .settings-btn.icon-btn {
+    display: flex;
+  }
+
+  .app-body {
+    display: grid;
+    grid-template-columns: 272px 290px 1fr 290px;
+    align-items: start;
+    min-height: calc(100vh - 65px);
+    padding-bottom: 0;
+  }
+
+  .sidebar,
+  .note-actions-panel,
+  .note-detail-footer {
+    display: flex;
+  }
+
+  .create-note-btn.btn {
+    display: flex;
+  }
+
+  .notes-list-panel {
+    padding: 20px 16px 20px 32px;
+    border-right: 1px solid var(--color-border);
+    height: 100%;
+    overflow-y: auto;
+  }
+
+  .note-detail-panel {
+    padding: 20px 24px;
+    border-right: 1px solid var(--color-border);
+  }
+
+  /* On desktop both panels are always visible, regardless of mobile-view state. */
+  [data-mobile-view] .notes-list-panel,
+  [data-mobile-view] .note-detail-panel {
+    display: block;
+  }
+
+  .note-detail-mobile-toolbar,
+  .bottom-nav,
+  .fab {
+    display: none;
+  }
+
+  /* Settings replaces the list/detail/actions columns, not the sidebar.
+     This comes after the rule above so it wins the specificity tie and
+     hides those columns even though the rule above sets them to block. */
+  [data-app-view="settings"] .notes-list-panel,
+  [data-app-view="settings"] .note-detail-panel,
+  [data-app-view="settings"] .note-actions-panel {
+    display: none;
+  }
+
+  .settings-panel {
+    grid-column: 2 / -1;
+  }
+
+  .settings-body {
+    flex-direction: row;
+    gap: 40px;
+  }
+
+  .settings-nav {
+    width: 220px;
+    flex-shrink: 0;
+  }
+}
+
+/* ==========================================================================
+   12. Settings page
+   ========================================================================== */
+
+.settings-panel {
+  display: none;
+  padding: 20px;
+}
+
+[data-app-view="settings"] .settings-panel {
+  display: block;
+}
+
+/* Mobile: settings is its own full-screen view, so hide the list/detail
+   panels and the create-note FAB while it's open. */
+[data-app-view="settings"] .notes-list-panel,
+[data-app-view="settings"] .note-detail-panel {
+  display: none;
+}
+
+[data-app-view="settings"] .fab {
+  display: none;
+}
+
+.settings-body {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.settings-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.settings-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  font-weight: 500;
+  font-size: 14px;
+  color: var(--color-text-secondary);
+}
+
+.settings-nav-item:hover {
+  background: var(--color-surface-secondary);
+}
+
+.settings-nav-item.is-active {
+  background: var(--color-surface-secondary);
+  color: var(--color-text);
+}
+
+.settings-section {
+  border: none;
+  margin: 0;
+  padding: 0;
+}
+
+.settings-section[hidden] {
+  display: none;
+}
+
+.settings-section legend {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--color-text);
+  padding: 0;
+}
+
+.settings-hint {
+  color: var(--color-text-secondary);
+  margin: 4px 0 16px;
+}
+
+.theme-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 16px;
+  margin-bottom: 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+}
+
+.theme-option:has(input:checked) {
+  background: var(--color-surface-secondary);
+  border-color: var(--color-primary);
+}
+
+/* Keeps the radio input first in the HTML (so keyboard/tab order and
+   screen readers see it before the label text) while placing it visually
+   last, to match the Figma layout. */
+.theme-option input {
+  order: 2;
+}
+
+.theme-option-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.theme-option-text small {
+  color: var(--color-text-secondary);
+}
+
+/* ==========================================================================
+   13. Confirmation modal
+   ========================================================================== */
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(14, 18, 27, 0.5);
+  z-index: 100;
+}
+
+.modal-overlay[hidden] {
+  display: none;
+}
+
+.modal {
+  width: 100%;
+  max-width: 420px;
+  padding: 24px;
+  background: var(--color-surface);
+  border-radius: var(--radius-md);
+  box-shadow: 0 10px 40px rgba(14, 18, 27, 0.25);
+}
+
+.modal-title {
+  margin: 0 0 8px;
+  font-size: 18px;
+}
+
+.modal-message {
+  margin: 0;
+  color: var(--color-text-secondary);
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.btn-danger {
+  background: var(--color-danger);
+  color: #ffffff;
+}
+
+/* ==========================================================================
+   14. Dark theme
+   Overriding the same custom properties used everywhere else means no
+   component CSS above needs to change to support dark mode.
+   ========================================================================== */
+
+[data-theme="dark"] {
+  --color-bg: #0b0d12;
+  --color-surface: #12141b;
+  --color-surface-secondary: #1c1f28;
+  --color-text: #f3f5f8;
+  --color-text-secondary: #b7bcc7;
+  --color-text-muted: #8b93a3;
+  --color-text-toolbar: #a7adb8;
+  --color-body-text: #d8dbe2;
+  --color-border: #262a35;
+  --color-tag-bg: #262a35;
+}
+
+/* ==========================================================================
+   15. Font themes
+   ========================================================================== */
+
+[data-font="serif"] {
+  --font-body: Georgia, "Times New Roman", Times, serif;
+}
+
+[data-font="monospace"] {
+  --font-body: "Courier New", Consolas, Menlo, monospace;
+}
