@@ -8,6 +8,7 @@
 import * as storage from "./storage.js";
 import * as noteManager from "./noteManager.js";
 import * as ui from "./ui.js";
+import * as themes from "./themes.js";
 
 // --- Element references ---------------------------------------------------
 // Looked up once, at the top, so every function below can just use them.
@@ -24,6 +25,10 @@ const archivedNotesLinks = document.querySelectorAll(".archived-notes-link");
 const settingsNav = document.querySelector(".settings-nav");
 const settingsSections = document.querySelectorAll(".settings-section");
 const settingsNavItems = document.querySelectorAll(".settings-nav-item");
+const colorThemeRadios = document.querySelectorAll('input[name="color-theme"]');
+const fontThemeRadios = document.querySelectorAll('input[name="font-theme"]');
+const applyThemeButton = document.querySelector(".apply-theme-btn");
+const applyFontButton = document.querySelector(".apply-font-btn");
 
 const createNoteButton = document.querySelector(".create-note-btn");
 const fabButton = document.querySelector(".fab");
@@ -57,6 +62,20 @@ if (notes === null) {
   notes = noteManager.getSampleNotes();
   storage.saveNotes(notes);
 }
+
+// Apply the saved color/font theme immediately (defaulting to light +
+// sans-serif for a first-time visitor), and check the matching radio
+// button in Settings so it reflects what's actually applied.
+const preferences = storage.loadPreferences() || { theme: "light", font: "sans-serif" };
+themes.applyTheme(preferences.theme);
+themes.applyFont(preferences.font);
+
+colorThemeRadios.forEach((radio) => {
+  radio.checked = radio.value === preferences.theme;
+});
+fontThemeRadios.forEach((radio) => {
+  radio.checked = radio.value === preferences.font;
+});
 
 // Whether the notes list is currently showing archived notes instead of
 // active ones. The sidebar/bottom-nav "All Notes" and "Archived Notes"
@@ -180,6 +199,31 @@ function showNotesView() {
 
 function showSettingsView() {
   document.body.dataset.appView = "settings";
+}
+
+// --- Theme & font settings -------------------------------------------------
+
+function getCheckedRadioValue(radios) {
+  const checkedRadio = Array.from(radios).find((radio) => radio.checked);
+  return checkedRadio ? checkedRadio.value : null;
+}
+
+function applySelectedTheme() {
+  const theme = getCheckedRadioValue(colorThemeRadios);
+  if (!theme) return;
+
+  themes.applyTheme(theme);
+  storage.savePreferences({ theme, font: getCheckedRadioValue(fontThemeRadios) });
+  ui.showToast("Theme updated!");
+}
+
+function applySelectedFont() {
+  const font = getCheckedRadioValue(fontThemeRadios);
+  if (!font) return;
+
+  themes.applyFont(font);
+  storage.savePreferences({ theme: getCheckedRadioValue(colorThemeRadios), font });
+  ui.showToast("Font updated!");
 }
 
 // Clears the search box itself (not just the searchQuery state) so the
@@ -625,3 +669,6 @@ settingsNav.addEventListener("click", (event) => {
     section.hidden = section.dataset.settingsPanel !== targetSection;
   });
 });
+
+applyThemeButton.addEventListener("click", applySelectedTheme);
+applyFontButton.addEventListener("click", applySelectedFont);
