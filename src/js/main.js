@@ -55,6 +55,25 @@ let selectedNoteId = notes.length > 0 ? notes[0].id : null;
 // saving, this note is removed instead of being kept as an empty note.
 let unsavedNewNoteId = null;
 
+// If the user was mid-edit when they left or reloaded the page, sessionStorage
+// has a draft of what they were typing. Restore it now, before the first
+// render, so the app opens exactly where they left off.
+const savedDraft = storage.loadDraft();
+
+if (savedDraft !== null) {
+  const draftNoteExists = notes.some((note) => note.id === savedDraft.noteId);
+
+  if (draftNoteExists) {
+    selectedNoteId = savedDraft.noteId;
+  } else {
+    // The draft belonged to a note that was never saved (the page was
+    // reloaded before clicking Save on a brand new note). Re-create it.
+    const restoredNote = noteManager.createNote(notes, "", "", []);
+    unsavedNewNoteId = restoredNote.id;
+    selectedNoteId = restoredNote.id;
+  }
+}
+
 // --- Rendering helpers -------------------------------------------------
 
 function getSelectedNote() {
@@ -134,6 +153,20 @@ function handleTitleInput() {
   }
 }
 
+// --- Drafts (sessionStorage) ---------------------------------------------
+// Saved on every keystroke so a reload or accidental tab close doesn't
+// lose unsaved edits. Cleared once the note is actually saved or the edit
+// is cancelled, since at that point there is nothing left to restore.
+
+function saveDraftFromForm() {
+  storage.saveDraft({
+    noteId: selectedNoteId,
+    title: titleInput.value,
+    tags: tagsInput.value,
+    content: contentInput.value,
+  });
+}
+
 function saveSelectedNote() {
   if (!validateTitle()) {
     titleInput.focus();
@@ -150,6 +183,7 @@ function saveSelectedNote() {
 
   unsavedNewNoteId = null;
   storage.saveNotes(notes);
+  storage.clearDraft();
   renderApp();
   ui.showToast("Note saved!");
 }
@@ -158,12 +192,23 @@ function cancelEditingSelectedNote() {
   if (selectedNoteId === unsavedNewNoteId) {
     discardUnsavedNewNote();
   }
+  storage.clearDraft();
   renderApp(); // re-fill the form from the saved note, discarding any typed edits
 }
 
 // --- Initial render ------------------------------------------------------
 
 renderApp();
+
+// renderApp() just filled the form from the saved note, which overwrites
+// any draft text with the note's real content. If there was a draft,
+// re-apply its (unsaved) text on top now that the form exists.
+if (savedDraft !== null) {
+  titleInput.value = savedDraft.title;
+  tagsInput.value = savedDraft.tags;
+  contentInput.value = savedDraft.content;
+  updateSaveButtonState();
+}
 
 // --- Event listeners -------------------------------------------------------
 
@@ -203,6 +248,10 @@ cancelButtons.forEach((button) => {
 
 titleInput.addEventListener("blur", validateTitle);
 titleInput.addEventListener("input", handleTitleInput);
+
+titleInput.addEventListener("input", saveDraftFromForm);
+tagsInput.addEventListener("input", saveDraftFromForm);
+contentInput.addEventListener("input", saveDraftFromForm);
 
 // Settings is a second top-level view. Switching between "notes" and
 // "settings" just changes an attribute on <body>; styles.css decides what
