@@ -104,7 +104,9 @@
       <ul class="notes-list"></ul>
     </main>
 
-    <section class="note-detail-panel" aria-label="Note detail">
+    <!-- The whole detail panel is a form: title, tags, and content are all
+         editable fields used for both creating and editing a note. -->
+    <form class="note-detail-panel" aria-label="Note detail">
 
       <!-- Mobile-only toolbar: replaces the desktop footer + action panel with icon buttons -->
       <div class="note-detail-mobile-toolbar">
@@ -113,24 +115,25 @@
           Go Back
         </button>
         <div class="toolbar-actions">
-          <button type="button" class="icon-btn" aria-label="Delete note">
+          <button type="button" class="icon-btn delete-btn" aria-label="Delete note">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18" /><path d="M8 6V4h8v2" /><path d="M19 6l-1 14H6L5 6" /></svg>
           </button>
-          <button type="button" class="icon-btn" aria-label="Archive note">
+          <button type="button" class="icon-btn archive-btn" aria-label="Archive note">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 8v13H3V8" /><path d="M1 3h22v5H1z" /><path d="M10 12h4" /></svg>
           </button>
-          <button type="button" class="text-btn">Cancel</button>
-          <button type="button" class="text-btn text-btn--primary">Save Note</button>
+          <button type="button" class="text-btn cancel-btn">Cancel</button>
+          <button type="submit" class="text-btn text-btn--primary">Save Note</button>
         </div>
       </div>
 
-      <h2 class="note-title-input" data-field="title"></h2>
+      <label class="visually-hidden" for="note-title-input">Note title</label>
+      <input type="text" id="note-title-input" class="note-title-input" data-field="title" placeholder="Enter a title..." />
 
       <div class="note-meta">
         <div class="meta-row">
           <svg class="meta-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.59 13.41L11 3.83V3H3v8h.83l9.58 9.59a2 2 0 0 0 2.83 0l4.35-4.35a2 2 0 0 0 0-2.83z" /><circle cx="6.5" cy="6.5" r="1.5" /></svg>
-          <span class="meta-label">Tags</span>
-          <span class="meta-value meta-value--strong" data-field="tags"></span>
+          <span class="meta-label" id="tags-label">Tags</span>
+          <input type="text" class="meta-value meta-value--strong tags-input" data-field="tags" aria-labelledby="tags-label" placeholder="Add tags separated by commas (e.g. Work, Planning)" />
         </div>
         <div class="meta-row">
           <svg class="meta-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10" /><path d="M12 6v6l4 2" /></svg>
@@ -139,14 +142,15 @@
         </div>
       </div>
 
-      <div class="note-body-input" data-field="content"></div>
+      <label class="visually-hidden" for="note-content-input">Note content</label>
+      <textarea id="note-content-input" class="note-body-input" data-field="content" placeholder="Start typing your note here..."></textarea>
 
       <!-- Desktop-only footer: same actions as the mobile toolbar's Cancel / Save Note -->
       <div class="note-detail-footer">
-        <button type="button" class="btn btn-primary">Save Note</button>
-        <button type="button" class="btn btn-secondary">Cancel</button>
+        <button type="submit" class="btn btn-primary">Save Note</button>
+        <button type="button" class="btn btn-secondary cancel-btn">Cancel</button>
       </div>
-    </section>
+    </form>
 
     <!-- Action panel: desktop-only. On mobile these same actions are the toolbar's trash/archive icons. -->
     <aside class="note-actions-panel" aria-label="Note actions">

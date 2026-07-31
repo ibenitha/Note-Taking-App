@@ -410,12 +410,18 @@ body {
 }
 
 .note-title-input {
+  display: block;
+  width: 100%;
+  border: none;
+  background: transparent;
+  font-family: inherit;
   font-size: 24px;
   font-weight: 700;
   letter-spacing: -0.5px;
   line-height: 1.2;
   color: var(--color-text);
   margin: 0 0 16px;
+  padding: 0;
 }
 
 .note-meta {
@@ -453,6 +459,22 @@ body {
 
 .meta-value--strong {
   color: var(--color-text);
+}
+
+.tags-input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font-family: inherit;
+  font-size: 14px;
+  letter-spacing: -0.2px;
+  padding: 0;
+}
+
+.tags-input::placeholder,
+.note-title-input::placeholder,
+.note-body-input::placeholder {
+  color: var(--color-text-secondary);
 }
 
 .note-body-input {

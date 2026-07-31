@@ -33,6 +33,14 @@ export function createNote(notes, title, content, tags) {
   return note;
 }
 
+// Removes the note with the given id from the notes array, if it exists.
+export function deleteNote(notes, id) {
+  const index = notes.findIndex((note) => note.id === id);
+  if (index !== -1) {
+    notes.splice(index, 1);
+  }
+}
+
 // Sample notes used only the very first time the app runs, before the
 // user has saved anything to localStorage. This lets the app demonstrate
 // its features immediately instead of starting on an empty list.

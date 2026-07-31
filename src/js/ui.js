@@ -76,9 +76,9 @@ function showEmptyNotesMessage(container) {
   container.appendChild(message);
 }
 
-// Fills in the detail panel with one note's data. Passing null clears the
-// panel and shows a placeholder instead (used when there is no note to
-// display, e.g. every note has been deleted).
+// Fills in the detail form with one note's data. Passing null clears the
+// form instead (used when there is no note to display, e.g. every note
+// has been deleted).
 export function renderNoteDetail(note) {
   const titleField = document.querySelector('[data-field="title"]');
   const tagsField = document.querySelector('[data-field="tags"]');
@@ -86,15 +86,25 @@ export function renderNoteDetail(note) {
   const contentField = document.querySelector('[data-field="content"]');
 
   if (note === null) {
-    titleField.textContent = "No note selected";
-    tagsField.textContent = "—";
-    lastEditedField.textContent = "—";
-    contentField.textContent = "Select a note from the list, or create a new one.";
+    titleField.value = "";
+    tagsField.value = "";
+    lastEditedField.textContent = "Not yet saved";
+    contentField.value = "";
     return;
   }
 
-  titleField.textContent = note.title;
-  tagsField.textContent = note.tags.join(", ");
+  titleField.value = note.title;
+  tagsField.value = note.tags.join(", ");
   lastEditedField.textContent = formatDate(note.timestamp);
-  contentField.textContent = note.content;
+  contentField.value = note.content;
+}
+
+// Splits the tags input's comma-separated text into a clean array of tags,
+// e.g. "Work, Planning" -> ["Work", "Planning"]. Trims extra spaces and
+// drops empty entries (from things like a trailing comma).
+export function parseTagsInput(tagsText) {
+  return tagsText
+    .split(",")
+    .map((tag) => tag.trim())
+    .filter((tag) => tag.length > 0);
 }
