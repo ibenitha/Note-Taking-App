@@ -7,6 +7,7 @@
 
 import * as storage from "./storage.js";
 import * as noteManager from "./noteManager.js";
+import * as ui from "./ui.js";
 
 // The app's notes live in this one array for as long as the page is open.
 // Every change (create, edit, delete, archive) updates this array first,
@@ -20,7 +21,20 @@ if (notes === null) {
   storage.saveNotes(notes);
 }
 
-console.log("Notes loaded from storage:", notes);
+// Tracks which note is currently shown in the detail panel. Starts as the
+// first note, or null if there are no notes at all.
+let selectedNoteId = notes.length > 0 ? notes[0].id : null;
+
+function getSelectedNote() {
+  return notes.find((note) => note.id === selectedNoteId) || null;
+}
+
+function renderApp() {
+  ui.renderAllNotes(notes, selectedNoteId);
+  ui.renderNoteDetail(getSelectedNote());
+}
+
+renderApp();
 
 const notesList = document.querySelector(".notes-list");
 const backButton = document.querySelector(".back-btn");
@@ -37,6 +51,8 @@ notesList.addEventListener("click", (event) => {
   const clickedCard = event.target.closest(".note-card");
   if (!clickedCard) return;
 
+  selectedNoteId = clickedCard.dataset.noteId;
+  renderApp();
   document.body.dataset.mobileView = "detail";
 });
 

@@ -99,80 +99,9 @@
 
       <button type="button" class="btn btn-primary create-note-btn">+ Create New Note</button>
 
-      <ul class="notes-list">
-        <li>
-          <button type="button" class="note-card is-active" data-note-id="1">
-            <h3 class="note-card-title">React Performance Optimization</h3>
-            <div class="tag-pills">
-              <span class="tag-pill">Dev</span>
-              <span class="tag-pill">React</span>
-            </div>
-            <time class="note-card-date">29 Oct 2024</time>
-          </button>
-        </li>
-        <li>
-          <button type="button" class="note-card" data-note-id="2">
-            <h3 class="note-card-title">Japan Travel Planning</h3>
-            <div class="tag-pills">
-              <span class="tag-pill">Travel</span>
-              <span class="tag-pill">Personal</span>
-            </div>
-            <time class="note-card-date">28 Oct 2024</time>
-          </button>
-        </li>
-        <li>
-          <button type="button" class="note-card" data-note-id="3">
-            <h3 class="note-card-title">Favorite Pasta Recipes</h3>
-            <div class="tag-pills">
-              <span class="tag-pill">Cooking</span>
-              <span class="tag-pill">Recipes</span>
-            </div>
-            <time class="note-card-date">27 Oct 2024</time>
-          </button>
-        </li>
-        <li>
-          <button type="button" class="note-card" data-note-id="4">
-            <h3 class="note-card-title">Weekly Workout Plan</h3>
-            <div class="tag-pills">
-              <span class="tag-pill">Dev</span>
-              <span class="tag-pill">React</span>
-            </div>
-            <time class="note-card-date">25 Oct 2024</time>
-          </button>
-        </li>
-        <li>
-          <button type="button" class="note-card" data-note-id="5">
-            <h3 class="note-card-title">Meal Prep Ideas</h3>
-            <div class="tag-pills">
-              <span class="tag-pill">Cooking</span>
-              <span class="tag-pill">Health</span>
-              <span class="tag-pill">Recipes</span>
-            </div>
-            <time class="note-card-date">12 Oct 2024</time>
-          </button>
-        </li>
-        <li>
-          <button type="button" class="note-card" data-note-id="6">
-            <h3 class="note-card-title">Reading List</h3>
-            <div class="tag-pills">
-              <span class="tag-pill">Personal</span>
-              <span class="tag-pill">Dev</span>
-            </div>
-            <time class="note-card-date">05 Oct 2024</time>
-          </button>
-        </li>
-        <li>
-          <button type="button" class="note-card" data-note-id="7">
-            <h3 class="note-card-title">Fitness Goals 2025</h3>
-            <div class="tag-pills">
-              <span class="tag-pill">Fitness</span>
-              <span class="tag-pill">Health</span>
-              <span class="tag-pill">Personal</span>
-            </div>
-            <time class="note-card-date">22 Sep 2024</time>
-          </button>
-        </li>
-      </ul>
+      <!-- Filled in by ui.js's renderAllNotes(). Left empty here on purpose:
+           the note cards are created dynamically from whatever is in storage. -->
+      <ul class="notes-list"></ul>
     </main>
 
     <section class="note-detail-panel" aria-label="Note detail">
@@ -195,37 +124,22 @@
         </div>
       </div>
 
-      <h2 class="note-title-input">React Performance Optimization</h2>
+      <h2 class="note-title-input" data-field="title"></h2>
 
       <div class="note-meta">
         <div class="meta-row">
           <svg class="meta-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.59 13.41L11 3.83V3H3v8h.83l9.58 9.59a2 2 0 0 0 2.83 0l4.35-4.35a2 2 0 0 0 0-2.83z" /><circle cx="6.5" cy="6.5" r="1.5" /></svg>
           <span class="meta-label">Tags</span>
-          <span class="meta-value meta-value--strong">Dev, React</span>
+          <span class="meta-value meta-value--strong" data-field="tags"></span>
         </div>
         <div class="meta-row">
           <svg class="meta-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10" /><path d="M12 6v6l4 2" /></svg>
           <span class="meta-label">Last edited</span>
-          <span class="meta-value">29 Oct 2024</span>
+          <span class="meta-value" data-field="last-edited"></span>
         </div>
       </div>
 
-      <div class="note-body-input">Key performance optimization techniques:
-
-1. Code Splitting
-- Use React.lazy() for route-based splitting
-- Implement dynamic imports for heavy components
-
-2. Memoization
-- useMemo for expensive calculations
-- useCallback for function props
-- React.memo for component optimization
-
-3. Virtual List Implementation
-- Use react-window for long lists
-- Implement infinite scrolling
-
-TODO: Benchmark current application and identify bottlenecks</div>
+      <div class="note-body-input" data-field="content"></div>
 
       <!-- Desktop-only footer: same actions as the mobile toolbar's Cancel / Save Note -->
       <div class="note-detail-footer">
