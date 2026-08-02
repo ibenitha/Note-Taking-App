@@ -81,7 +81,6 @@ textarea:focus-visible {
   --color-danger: #e5484d;
 
   --font-body: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  --font-logo: "Pacifico", cursive;
 
   --radius-sm: 6px;
   --radius-md: 8px;
@@ -116,16 +115,9 @@ body {
   display: flex;
   align-items: center;
   gap: 10px;
-  color: var(--color-primary); /* tints the feather icon (SVG uses currentColor) */
   flex-shrink: 0;
 }
 
-.logo-text {
-  font-family: var(--font-logo);
-  font-size: 23px;
-  letter-spacing: -0.02em;
-  color: var(--color-text);
-}
 
 .header-search {
   display: none; /* shown on desktop, see media query */
@@ -1050,15 +1042,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
-  color: var(--color-primary);
   margin-bottom: 24px;
-}
-
-.auth-logo .logo-text {
-  font-family: var(--font-logo);
-  font-size: 26px;
-  color: var(--color-text);
 }
 
 .auth-screen[hidden] {
