@@ -381,7 +381,9 @@ body {
 }
 
 .location-btn {
-  display: block;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   margin: 0 0 16px;
   padding: 0;
   font-size: 13px;
@@ -695,11 +697,12 @@ body {
   bottom: 84px;
   width: 52px;
   height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   border-radius: 50%;
   background: var(--color-primary);
   color: #ffffff;
-  font-size: 1.6rem;
-  line-height: 1;
   box-shadow: 0 4px 12px rgba(51, 92, 255, 0.4);
 }
 
