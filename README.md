@@ -14,6 +14,7 @@ Then open the printed `localhost` URL.
 
 ## Features
 
+- **Auth (simulated)**: Login, Sign Up, Forgot Password, and Reset Password screens gate the app. There is no backend, so this is a client-side simulation — see "Known simplifications" below.
 - **Notes**: create, read, update, delete
 - **Archive**: archive/restore notes, with a separate Archived Notes view
 - **Tags**: add tags to a note, filter by tag from a dynamically generated sidebar list
@@ -36,6 +37,7 @@ src/
     main.js          Entry point: wires the other modules together, owns app state, handles events
     storage.js       The only module that touches localStorage/sessionStorage
     noteManager.js   The Note data model and note business rules (create/delete/search/filter/tag)
+    auth.js          Password validation and login-matching rules for the simulated account
     ui.js            The only module that touches the DOM for rendering
     themes.js        Applies the color/font theme by setting attributes on <html>
 ```
@@ -46,8 +48,8 @@ Each module has one job, and data flows in one direction: `main.js` reacts to an
 
 These were deliberate choices, not oversights — noted here in case they come up in review:
 
-- **No authentication.** The provided Figma design included Login/Sign Up/Forgot Password screens, but the assignment describes a single-user, client-side-only app with no backend. Building real auth isn't possible without a server, and decorative fake-auth screens would add UI surface with no graded value, so they were left out entirely (agreed with the project owner before implementation).
-- **`main.js` is larger than the "~250 lines" guideline** (around 700 lines). It's the composition root for a genuinely multi-feature app (CRUD, archive, tags, search, settings, modals, drafts, geolocation, keyboard handling), and splitting it further would mean adding files beyond the assignment's specified five modules. Each concern is grouped under a clear section comment and is independently easy to point to and explain in a walkthrough.
+- **Auth is simulated, not real security.** The assignment describes a single-user, client-side-only app with no backend, so there is nowhere secure to check a password. Sign Up stores one plain-text `{ email, password }` account in `localStorage` (see `auth.js`'s file comment); Login compares against it directly. This is enough to demonstrate the full flow (including validation, a "forgot password" simulation, and session persistence across reloads) but must never be mistaken for real authentication — anyone with access to the browser's dev tools can read or change the stored credentials. The "Log in with Google" button is decorative (shows a toast) since real OAuth requires a backend and a registered client ID.
+- **`main.js` is larger than the "~250 lines" guideline** (around 900 lines). It's the composition root for a genuinely multi-feature app (auth, CRUD, archive, tags, search, settings, modals, drafts, geolocation, keyboard handling), and splitting it further would mean adding files beyond the assignment's specified five modules (`auth.js` was already an intentional, justified exception — see Project structure above). Each concern is grouped under a clear section comment and is independently easy to point to and explain in a walkthrough.
 - **Tablet uses the mobile layout.** There's one responsive breakpoint at 900px (mobile-style single view below it, 4-column desktop layout above it) rather than a distinct third tablet layout, since no tablet-specific Figma frame was provided and the mobile layout reads fine at tablet widths.
 - **Geolocation stores raw coordinates**, not a city name. Reverse-geocoding a coordinate into a city requires a third-party API (and typically an API key), which would add an external network dependency this project otherwise avoids.
 - **Sample data is 3 notes**, not the full set shown in the Figma mockups, since the point of the seed data is just to demonstrate the app on first run, not to reproduce the mockup exactly.
@@ -56,6 +58,7 @@ These were deliberate choices, not oversights — noted here in case they come u
 
 | Feature | How to show it |
 |---|---|
+| Auth (simulated) | Sign Up with any email + 8+ character password (auto-logs you in). Settings → Logout. Log back in with the same credentials. Try "Forgot" → wrong email shows an error, the account's email reveals a "continue to reset" link (simulating the emailed link) → set a new password → log in with it. |
 | Create/Read/Update/Delete | Click "+ Create New Note", fill it in, Save. Edit any field on an existing note and Save. Click Delete Note and confirm. |
 | Archive/Restore | Open a note, click Archive Note, confirm. Click "Archived Notes" in the sidebar to see it; open it and click Restore Note. |
 | Tags | Type tags (comma-separated) into a note, save, then click that tag in the sidebar to filter. |
@@ -69,4 +72,4 @@ These were deliberate choices, not oversights — noted here in case they come u
 
 ## Commit history
 
-The commit history is organized as one commit per feature milestone (data layer → read → create → update → validation → drafts → delete → archive → tags → search → accessibility → themes → responsive → geolocation), each independently reviewable and testable. Run `git log --oneline` to see the full sequence.
+The commit history is organized as one commit per feature milestone (data layer → read → create → update → validation → drafts → delete → archive → tags → search → accessibility → themes → responsive → geolocation → auth), each independently reviewable and testable. Run `git log --oneline` to see the full sequence.

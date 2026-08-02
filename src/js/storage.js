@@ -9,6 +9,8 @@
 const NOTES_KEY = "notes";
 const PREFERENCES_KEY = "preferences";
 const DRAFT_KEY = "noteDraft";
+const ACCOUNT_KEY = "account";
+const SESSION_KEY = "session";
 
 // Saves the full notes array as a JSON string. localStorage can only
 // store strings, so objects and arrays must be converted with
@@ -61,4 +63,37 @@ export function loadDraft() {
 
 export function clearDraft() {
   sessionStorage.removeItem(DRAFT_KEY);
+}
+
+// The account is the one simulated user this demo supports (there is no
+// backend, so there is nowhere to store more than one real account).
+export function saveAccount(account) {
+  localStorage.setItem(ACCOUNT_KEY, JSON.stringify(account));
+}
+
+export function loadAccount() {
+  const savedAccount = localStorage.getItem(ACCOUNT_KEY);
+  if (!savedAccount) {
+    return null;
+  }
+  return JSON.parse(savedAccount);
+}
+
+// The session is just "is someone logged in right now". It uses
+// localStorage (not sessionStorage) so logging in stays in effect across
+// a page reload, the same way a real "remember me" session would.
+export function saveSession(session) {
+  localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+}
+
+export function loadSession() {
+  const savedSession = localStorage.getItem(SESSION_KEY);
+  if (!savedSession) {
+    return null;
+  }
+  return JSON.parse(savedSession);
+}
+
+export function clearSession() {
+  localStorage.removeItem(SESSION_KEY);
 }

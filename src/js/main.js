@@ -9,6 +9,7 @@ import * as storage from "./storage.js";
 import * as noteManager from "./noteManager.js";
 import * as ui from "./ui.js";
 import * as themes from "./themes.js";
+import * as auth from "./auth.js";
 
 // --- Element references ---------------------------------------------------
 // Looked up once, at the top, so every function below can just use them.
@@ -49,6 +50,26 @@ const modalCancelButton = document.querySelector(".modal-cancel-btn");
 const searchForm = document.querySelector(".header-search");
 const searchInput = document.querySelector("#search-input");
 const mobileSearchButton = document.querySelector(".mobile-search-btn");
+
+const loginForm = document.querySelector('[data-auth-form="login"]');
+const signupForm = document.querySelector('[data-auth-form="signup"]');
+const forgotPasswordForm = document.querySelector('[data-auth-form="forgot-password"]');
+const resetPasswordForm = document.querySelector('[data-auth-form="reset-password"]');
+const continueToResetWrapper = document.querySelector(".switch-to-reset-wrapper");
+
+const switchToSignupLinks = document.querySelectorAll(".switch-to-signup");
+const switchToLoginLinks = document.querySelectorAll(".switch-to-login");
+const switchToResetLinks = document.querySelectorAll(".switch-to-reset");
+const forgotPasswordLink = document.querySelector(".forgot-password-link");
+const passwordToggleButtons = document.querySelectorAll(".password-toggle-btn");
+const googleButtons = document.querySelectorAll(".google-btn");
+const logoutButton = document.querySelector(".logout-btn");
+
+// --- Session ---------------------------------------------------------------
+// Checked immediately, before anything else renders, so a returning logged-in
+// user never sees a flash of the login screen.
+
+document.body.dataset.session = storage.loadSession() ? "loggedIn" : "loggedOut";
 
 // --- App state -------------------------------------------------------------
 // The app's notes live in this one array for as long as the page is open.
@@ -526,6 +547,125 @@ function handleLocationButtonClick() {
   navigator.geolocation.getCurrentPosition(handleLocationSuccess, handleLocationError);
 }
 
+// --- Auth (simulated, client-side only — see auth.js) -----------------
+
+function handleLoginSubmit(event) {
+  event.preventDefault();
+  ui.clearAllFieldErrors(loginForm);
+  ui.showFormError(loginForm, "");
+
+  const email = loginForm.querySelector('[data-field="email"]').value.trim();
+  const password = loginForm.querySelector('[data-field="password"]').value;
+
+  let isValid = true;
+  if (!email) {
+    ui.showFieldError(loginForm, "email", "Email is required.");
+    isValid = false;
+  }
+  if (!password) {
+    ui.showFieldError(loginForm, "password", "Password is required.");
+    isValid = false;
+  }
+  if (!isValid) return;
+
+  const account = storage.loadAccount();
+  if (!auth.isValidLogin(account, email, password)) {
+    ui.showFormError(loginForm, "Invalid email or password.");
+    return;
+  }
+
+  storage.saveSession({ email });
+  document.body.dataset.session = "loggedIn";
+  ui.resetAuthForm(loginForm);
+  ui.showToast("Welcome back!");
+}
+
+function handleSignupSubmit(event) {
+  event.preventDefault();
+  ui.clearAllFieldErrors(signupForm);
+  ui.showFormError(signupForm, "");
+
+  const email = signupForm.querySelector('[data-field="email"]').value.trim();
+  const password = signupForm.querySelector('[data-field="password"]').value;
+
+  let isValid = true;
+  if (!email) {
+    ui.showFieldError(signupForm, "email", "Email is required.");
+    isValid = false;
+  }
+  if (!auth.isPasswordValid(password)) {
+    ui.showFieldError(signupForm, "password", "Password must be at least 8 characters.");
+    isValid = false;
+  }
+  if (!isValid) return;
+
+  // This demo supports exactly one account, so signing up again simply
+  // replaces whatever account existed before.
+  storage.saveAccount(auth.createAccount(email, password));
+  storage.saveSession({ email });
+  document.body.dataset.session = "loggedIn";
+  ui.resetAuthForm(signupForm);
+  ui.showToast("Account created!");
+}
+
+function handleForgotPasswordSubmit(event) {
+  event.preventDefault();
+  ui.clearAllFieldErrors(forgotPasswordForm);
+  ui.showFormError(forgotPasswordForm, "");
+
+  const email = forgotPasswordForm.querySelector('[data-field="email"]').value.trim();
+  if (!email) {
+    ui.showFieldError(forgotPasswordForm, "email", "Email is required.");
+    return;
+  }
+
+  const account = storage.loadAccount();
+  if (!account || account.email !== email) {
+    ui.showFormError(forgotPasswordForm, "No account found with that email.");
+    return;
+  }
+
+  // There's no real email to send, so this reveals a link that simulates
+  // clicking the one that would have arrived in a real inbox.
+  continueToResetWrapper.hidden = false;
+}
+
+function handleResetPasswordSubmit(event) {
+  event.preventDefault();
+  ui.clearAllFieldErrors(resetPasswordForm);
+  ui.showFormError(resetPasswordForm, "");
+
+  const password = resetPasswordForm.querySelector('[data-field="password"]').value;
+  const confirmPassword = resetPasswordForm.querySelector('[data-field="confirm-password"]').value;
+
+  let isValid = true;
+  if (!auth.isPasswordValid(password)) {
+    ui.showFieldError(resetPasswordForm, "password", "Password must be at least 8 characters.");
+    isValid = false;
+  }
+  if (confirmPassword !== password) {
+    ui.showFieldError(resetPasswordForm, "confirm-password", "Passwords do not match.");
+    isValid = false;
+  }
+  if (!isValid) return;
+
+  const account = storage.loadAccount();
+  account.password = password;
+  storage.saveAccount(account);
+
+  ui.resetAuthForm(resetPasswordForm);
+  continueToResetWrapper.hidden = true;
+  ui.showAuthScreen("login");
+  ui.showToast("Password reset! Please log in.");
+}
+
+function handleLogout() {
+  storage.clearSession();
+  document.body.dataset.session = "loggedOut";
+  ui.showAuthScreen("login");
+  showNotesView();
+}
+
 // --- Initial render ------------------------------------------------------
 
 renderApp();
@@ -714,6 +854,7 @@ archivedNotesLinks.forEach((link) => {
 settingsNav.addEventListener("click", (event) => {
   const clickedItem = event.target.closest(".settings-nav-item");
   if (!clickedItem) return;
+  if (!clickedItem.dataset.settingsSection) return; // Logout is an action, not a tab — it has its own listener
 
   const targetSection = clickedItem.dataset.settingsSection;
 
@@ -728,3 +869,36 @@ settingsNav.addEventListener("click", (event) => {
 
 applyThemeButton.addEventListener("click", applySelectedTheme);
 applyFontButton.addEventListener("click", applySelectedFont);
+
+// --- Auth event listeners --------------------------------------------------
+
+loginForm.addEventListener("submit", handleLoginSubmit);
+signupForm.addEventListener("submit", handleSignupSubmit);
+forgotPasswordForm.addEventListener("submit", handleForgotPasswordSubmit);
+resetPasswordForm.addEventListener("submit", handleResetPasswordSubmit);
+
+switchToSignupLinks.forEach((link) => {
+  link.addEventListener("click", () => ui.showAuthScreen("signup"));
+});
+
+switchToLoginLinks.forEach((link) => {
+  link.addEventListener("click", () => ui.showAuthScreen("login"));
+});
+
+switchToResetLinks.forEach((link) => {
+  link.addEventListener("click", () => ui.showAuthScreen("reset-password"));
+});
+
+forgotPasswordLink.addEventListener("click", () => ui.showAuthScreen("forgot-password"));
+
+passwordToggleButtons.forEach((button) => {
+  button.addEventListener("click", () => ui.togglePasswordVisibility(button));
+});
+
+googleButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    ui.showToast("Google sign-in isn't available in this demo.");
+  });
+});
+
+logoutButton.addEventListener("click", handleLogout);

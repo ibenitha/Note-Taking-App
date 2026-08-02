@@ -10,7 +10,145 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Pacifico&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="src/css/styles.css" />
 </head>
-<body data-mobile-view="list" data-app-view="notes">
+<body data-session="loggedOut" data-mobile-view="list" data-app-view="notes">
+
+  <!-- Auth: shown instead of the notes app until the user logs in. This is a
+       simulated, client-side-only login (there is no backend), stored in
+       localStorage purely to demonstrate the flow — see auth.js. -->
+  <div class="auth-shell">
+    <div class="auth-card">
+
+      <div class="auth-logo">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M20 2c-3 0-14 4-14 12 0 3 1 5 2 6 1-4 3-7 6-9-2 3-3 6-3 9 4-1 9-6 9-14 0-1 0-3 0-4z" />
+        </svg>
+        <span class="logo-text">Notes</span>
+      </div>
+
+      <!-- Login -->
+      <section class="auth-screen" data-auth-screen="login">
+        <h1 class="auth-title">Welcome to Note</h1>
+        <p class="auth-subtitle">Please log in to continue</p>
+
+        <form class="auth-form" data-auth-form="login" novalidate>
+          <label class="auth-label" for="login-email">Email Address</label>
+          <input type="email" id="login-email" class="auth-input" data-field="email" placeholder="email@example.com" autocomplete="username" />
+          <p class="field-error" data-error-for="email"></p>
+
+          <div class="auth-label-row">
+            <label class="auth-label" for="login-password">Password</label>
+            <button type="button" class="link-btn forgot-password-link">Forgot</button>
+          </div>
+          <div class="password-field">
+            <input type="password" id="login-password" class="auth-input" data-field="password" autocomplete="current-password" />
+            <button type="button" class="password-toggle-btn" aria-label="Show password">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg>
+            </button>
+          </div>
+          <p class="field-error" data-error-for="password"></p>
+          <p class="form-error" role="alert"></p>
+
+          <button type="submit" class="btn btn-primary auth-submit-btn">Login</button>
+        </form>
+
+        <div class="auth-divider"><span>Or log in with:</span></div>
+        <button type="button" class="btn btn-outline google-btn">
+          <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M23.52 12.27c0-.85-.08-1.67-.22-2.45H12v4.64h6.47a5.54 5.54 0 0 1-2.4 3.63v3h3.87c2.27-2.09 3.58-5.17 3.58-8.82z" /><path fill="#34A853" d="M12 24c3.24 0 5.95-1.07 7.94-2.91l-3.87-3c-1.08.72-2.45 1.15-4.07 1.15-3.13 0-5.78-2.11-6.73-4.95H1.27v3.1A12 12 0 0 0 12 24z" /><path fill="#FBBC05" d="M5.27 14.29a7.2 7.2 0 0 1 0-4.58v-3.1H1.27a12 12 0 0 0 0 10.78z" /><path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.94 1.19 15.24 0 12 0A12 12 0 0 0 1.27 6.61l4 3.1C6.22 6.86 8.87 4.75 12 4.75z" /></svg>
+          Google
+        </button>
+
+        <p class="auth-footer-text">No account yet? <button type="button" class="link-btn switch-to-signup">Sign Up</button></p>
+      </section>
+
+      <!-- Sign Up -->
+      <section class="auth-screen" data-auth-screen="signup" hidden>
+        <h1 class="auth-title">Create Your Account</h1>
+        <p class="auth-subtitle">Sign up to start organizing your notes and boost your productivity.</p>
+
+        <form class="auth-form" data-auth-form="signup" novalidate>
+          <label class="auth-label" for="signup-email">Email Address</label>
+          <input type="email" id="signup-email" class="auth-input" data-field="email" placeholder="email@example.com" autocomplete="username" />
+          <p class="field-error" data-error-for="email"></p>
+
+          <label class="auth-label" for="signup-password">Password</label>
+          <div class="password-field">
+            <input type="password" id="signup-password" class="auth-input" data-field="password" autocomplete="new-password" />
+            <button type="button" class="password-toggle-btn" aria-label="Show password">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg>
+            </button>
+          </div>
+          <p class="field-hint">At least 8 characters</p>
+          <p class="field-error" data-error-for="password"></p>
+          <p class="form-error" role="alert"></p>
+
+          <button type="submit" class="btn btn-primary auth-submit-btn">Sign up</button>
+        </form>
+
+        <div class="auth-divider"><span>Or log in with:</span></div>
+        <button type="button" class="btn btn-outline google-btn">
+          <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M23.52 12.27c0-.85-.08-1.67-.22-2.45H12v4.64h6.47a5.54 5.54 0 0 1-2.4 3.63v3h3.87c2.27-2.09 3.58-5.17 3.58-8.82z" /><path fill="#34A853" d="M12 24c3.24 0 5.95-1.07 7.94-2.91l-3.87-3c-1.08.72-2.45 1.15-4.07 1.15-3.13 0-5.78-2.11-6.73-4.95H1.27v3.1A12 12 0 0 0 12 24z" /><path fill="#FBBC05" d="M5.27 14.29a7.2 7.2 0 0 1 0-4.58v-3.1H1.27a12 12 0 0 0 0 10.78z" /><path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.94 1.19 15.24 0 12 0A12 12 0 0 0 1.27 6.61l4 3.1C6.22 6.86 8.87 4.75 12 4.75z" /></svg>
+          Google
+        </button>
+
+        <p class="auth-footer-text">Already have an account? <button type="button" class="link-btn switch-to-login">Login</button></p>
+      </section>
+
+      <!-- Forgot Password -->
+      <section class="auth-screen" data-auth-screen="forgot-password" hidden>
+        <h1 class="auth-title">Forgotten your password?</h1>
+        <p class="auth-subtitle">Enter your email below, and we'll send you a link to reset it.</p>
+
+        <form class="auth-form" data-auth-form="forgot-password" novalidate>
+          <label class="auth-label" for="forgot-email">Email Address</label>
+          <input type="email" id="forgot-email" class="auth-input" data-field="email" placeholder="email@example.com" autocomplete="username" />
+          <p class="field-error" data-error-for="email"></p>
+          <p class="form-error" role="alert"></p>
+
+          <button type="submit" class="btn btn-primary auth-submit-btn">Send Reset Link</button>
+        </form>
+
+        <p class="auth-footer-text switch-to-reset-wrapper" hidden>
+          Reset link "sent". Since this demo has no real email,
+          <button type="button" class="link-btn switch-to-reset">continue to reset your password</button>.
+        </p>
+
+        <p class="auth-footer-text"><button type="button" class="link-btn switch-to-login">Back to Login</button></p>
+      </section>
+
+      <!-- Reset Password -->
+      <section class="auth-screen" data-auth-screen="reset-password" hidden>
+        <h1 class="auth-title">Reset Your Password</h1>
+        <p class="auth-subtitle">Choose a new password to secure your account.</p>
+
+        <form class="auth-form" data-auth-form="reset-password" novalidate>
+          <label class="auth-label" for="reset-password">New Password</label>
+          <div class="password-field">
+            <input type="password" id="reset-password" class="auth-input" data-field="password" autocomplete="new-password" />
+            <button type="button" class="password-toggle-btn" aria-label="Show password">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg>
+            </button>
+          </div>
+          <p class="field-hint">At least 8 characters</p>
+          <p class="field-error" data-error-for="password"></p>
+
+          <label class="auth-label" for="reset-confirm-password">Confirm New Password</label>
+          <div class="password-field">
+            <input type="password" id="reset-confirm-password" class="auth-input" data-field="confirm-password" autocomplete="new-password" />
+            <button type="button" class="password-toggle-btn" aria-label="Show password">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg>
+            </button>
+          </div>
+          <p class="field-error" data-error-for="confirm-password"></p>
+          <p class="form-error" role="alert"></p>
+
+          <button type="submit" class="btn btn-primary auth-submit-btn">Reset Password</button>
+        </form>
+      </section>
+
+    </div>
+  </div>
+
+  <div class="app-shell">
 
   <header class="app-header">
     <div class="logo">
@@ -152,6 +290,10 @@
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7V4h16v3" /><path d="M9 20h6" /><path d="M12 4v16" /></svg>
             <span>Font Theme</span>
           </button>
+          <button type="button" class="settings-nav-item logout-btn">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><path d="M16 17l5-5-5-5" /><path d="M21 12H9" /></svg>
+            <span>Logout</span>
+          </button>
         </nav>
 
         <div class="settings-content">
@@ -256,6 +398,8 @@
   </nav>
 
   <button type="button" class="fab" aria-label="Create new note">+</button>
+
+  </div>
 
   <!-- Brief success feedback after an action like saving a note.
        aria-live announces the message to screen readers as soon as it changes. -->

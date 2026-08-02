@@ -954,3 +954,183 @@ body {
 [data-font="monospace"] {
   --font-body: "Courier New", Consolas, Menlo, monospace;
 }
+
+/* ==========================================================================
+   16. Auth screens (login / sign up / forgot & reset password)
+   The whole notes app lives in .app-shell and the whole auth flow lives in
+   .auth-shell; data-session on <body> shows exactly one of the two.
+   ========================================================================== */
+
+.auth-shell {
+  display: none;
+}
+
+[data-session="loggedOut"] .auth-shell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 24px;
+  background: var(--color-surface-secondary);
+}
+
+[data-session="loggedOut"] .app-shell {
+  display: none;
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 448px;
+  padding: 40px;
+  background: var(--color-surface);
+  border-radius: 16px;
+  box-shadow: 0 10px 40px rgba(14, 18, 27, 0.1);
+}
+
+.auth-logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  color: var(--color-primary);
+  margin-bottom: 24px;
+}
+
+.auth-logo .logo-text {
+  font-family: var(--font-logo);
+  font-size: 26px;
+  color: var(--color-text);
+}
+
+.auth-screen[hidden] {
+  display: none;
+}
+
+.auth-title {
+  margin: 0 0 8px;
+  font-size: 24px;
+  text-align: center;
+  color: var(--color-text);
+}
+
+.auth-subtitle {
+  margin: 0 0 28px;
+  text-align: center;
+  color: var(--color-text-secondary);
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+}
+
+.auth-label {
+  margin-bottom: 6px;
+  font-weight: 500;
+  font-size: 14px;
+  color: var(--color-text);
+}
+
+.auth-label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.auth-input {
+  width: 100%;
+  padding: 12px 14px;
+  margin-bottom: 16px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-family: inherit;
+  font-size: 14px;
+}
+
+.auth-input.has-error {
+  border-color: var(--color-danger);
+}
+
+.password-field {
+  position: relative;
+}
+
+.password-field .auth-input {
+  padding-right: 44px;
+}
+
+.password-toggle-btn {
+  position: absolute;
+  top: 0;
+  right: 4px;
+  bottom: 16px; /* matches .auth-input's margin-bottom so it centers on the input, not the gap below it */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  color: var(--color-text-secondary);
+}
+
+.field-hint {
+  margin: -10px 0 16px;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+.form-error {
+  margin: -10px 0 16px;
+  font-size: 13px;
+  color: var(--color-danger);
+}
+
+.form-error:empty {
+  display: none;
+}
+
+.auth-submit-btn {
+  width: 100%;
+  margin-top: 8px;
+}
+
+.auth-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 24px 0;
+  color: var(--color-text-secondary);
+  font-size: 13px;
+}
+
+.auth-divider::before,
+.auth-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--color-border);
+}
+
+.google-btn {
+  width: 100%;
+}
+
+.auth-footer-text {
+  margin: 20px 0 0;
+  text-align: center;
+  color: var(--color-text-secondary);
+  font-size: 14px;
+}
+
+.link-btn {
+  color: var(--color-primary);
+  font-weight: 500;
+  text-decoration: underline;
+}
+
+.forgot-password-link {
+  font-size: 14px;
+  font-weight: 400;
+  text-decoration: underline;
+  color: var(--color-text-secondary);
+}
