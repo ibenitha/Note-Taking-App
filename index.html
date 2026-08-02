@@ -445,8 +445,17 @@
   </div>
 
   <!-- Brief success feedback after an action like saving a note.
-       aria-live announces the message to screen readers as soon as it changes. -->
-  <p class="toast" aria-live="polite" hidden></p>
+       aria-live announces the message to screen readers as soon as it changes.
+       The action link is optional (e.g. "Archived Notes" after archiving) —
+       ui.js hides it when a toast has nothing to link to. -->
+  <div class="toast" aria-live="polite" hidden>
+    <svg class="toast-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10" /><path d="M9 12l2 2 4-4" /></svg>
+    <span class="toast-message"></span>
+    <a href="#" class="toast-action-link" hidden></a>
+    <button type="button" class="toast-close-btn" aria-label="Dismiss">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12" /></svg>
+    </button>
+  </div>
 
   <script type="module" src="src/js/main.js"></script>
 </body>

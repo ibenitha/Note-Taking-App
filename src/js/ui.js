@@ -249,19 +249,43 @@ export function clearValidationError() {
 
 let toastTimeoutId = null;
 
-// Shows a brief success message, then hides it again after a couple of
-// seconds. Calling this again while a toast is already showing restarts
-// the timer instead of stacking messages.
-export function showToast(message) {
+// Shows a brief success message, then hides it again after a few seconds.
+// Calling this again while a toast is already showing replaces it and
+// restarts the timer instead of stacking messages.
+//
+// action is optional: { label, onClick } adds a clickable link (e.g.
+// "Archived Notes" after archiving a note) alongside the message.
+export function showToast(message, action) {
   const toast = document.querySelector(".toast");
+  const messageField = toast.querySelector(".toast-message");
+  const actionLink = toast.querySelector(".toast-action-link");
 
-  toast.textContent = message;
+  messageField.textContent = message;
+
+  if (action) {
+    actionLink.textContent = action.label;
+    actionLink.hidden = false;
+    // Assigning .onclick (instead of addEventListener) means each call
+    // replaces the previous handler instead of piling up a new listener
+    // every time a toast is shown.
+    actionLink.onclick = (event) => {
+      event.preventDefault();
+      hideToast();
+      action.onClick();
+    };
+  } else {
+    actionLink.hidden = true;
+    actionLink.onclick = null;
+  }
+
   toast.hidden = false;
-
   clearTimeout(toastTimeoutId);
-  toastTimeoutId = setTimeout(() => {
-    toast.hidden = true;
-  }, 2500);
+  toastTimeoutId = setTimeout(hideToast, 4000);
+}
+
+export function hideToast() {
+  document.querySelector(".toast").hidden = true;
+  clearTimeout(toastTimeoutId);
 }
 
 // --- Confirmation modal ----------------------------------------------------
@@ -346,9 +370,20 @@ export function resetAuthForm(form) {
 
 // The toggle button always sits right after its input in the markup
 // (see index.html's .password-field), so this needs no extra lookup.
+// The two icon states share one <svg> element; only the inner path data
+// swaps, so the button's size/attributes never need to change.
+const EYE_ICON_PATHS = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" />';
+const EYE_OFF_ICON_PATHS =
+  '<path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a18.5 18.5 0 0 1 5.06-5.94" />' +
+  '<path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" />' +
+  '<path d="M14.12 14.12a3 3 0 1 1-4.24-4.24" />' +
+  '<path d="M1 1l22 22" />';
+
 export function togglePasswordVisibility(toggleButton) {
   const input = toggleButton.previousElementSibling;
   const isCurrentlyPassword = input.type === "password";
+
   input.type = isCurrentlyPassword ? "text" : "password";
   toggleButton.setAttribute("aria-label", isCurrentlyPassword ? "Hide password" : "Show password");
+  toggleButton.querySelector("svg").innerHTML = isCurrentlyPassword ? EYE_OFF_ICON_PATHS : EYE_ICON_PATHS;
 }

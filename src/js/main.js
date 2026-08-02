@@ -46,6 +46,7 @@ const locationButton = document.querySelector(".location-btn");
 const modalOverlay = document.querySelector(".modal-overlay");
 const modalConfirmButton = document.querySelector(".modal-confirm-btn");
 const modalCancelButton = document.querySelector(".modal-cancel-btn");
+const toastCloseButton = document.querySelector(".toast-close-btn");
 
 const searchForm = document.querySelector(".header-search");
 const searchInput = document.querySelector("#search-input");
@@ -472,7 +473,7 @@ function archiveSelectedNote() {
 
   renderApp();
   showNotesView();
-  ui.showToast("Note archived.");
+  ui.showToast("Note archived.", { label: "Archived Notes", onClick: showArchivedNotes });
 }
 
 function restoreSelectedNote() {
@@ -550,6 +551,31 @@ function handleLocationButtonClick() {
 
 // --- Auth (simulated, client-side only — see auth.js) -----------------
 
+// A simple, readable check: something, then "@", then something, then a
+// "." then something — not full RFC 5322 compliance, just enough to catch
+// obvious typos like a missing "@" or a missing dot before the domain.
+// The browser's native checkValidity() for type="email" turned out to be
+// too permissive for this (it accepts "email@examplecom", no dot needed).
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+// Shared by every auth form's email field: required, then a format check.
+function isEmailFieldValid(form) {
+  const emailInput = form.querySelector('[data-field="email"]');
+  const email = emailInput.value.trim();
+
+  if (email === "") {
+    ui.showFieldError(form, "email", "Email is required.");
+    return false;
+  }
+  if (!EMAIL_PATTERN.test(email)) {
+    ui.showFieldError(form, "email", "Please enter a valid email address.");
+    return false;
+  }
+
+  ui.clearFieldError(form, "email");
+  return true;
+}
+
 function handleLoginSubmit(event) {
   event.preventDefault();
   ui.clearAllFieldErrors(loginForm);
@@ -558,11 +584,7 @@ function handleLoginSubmit(event) {
   const email = loginForm.querySelector('[data-field="email"]').value.trim();
   const password = loginForm.querySelector('[data-field="password"]').value;
 
-  let isValid = true;
-  if (!email) {
-    ui.showFieldError(loginForm, "email", "Email is required.");
-    isValid = false;
-  }
+  let isValid = isEmailFieldValid(loginForm);
   if (!password) {
     ui.showFieldError(loginForm, "password", "Password is required.");
     isValid = false;
@@ -589,11 +611,7 @@ function handleSignupSubmit(event) {
   const email = signupForm.querySelector('[data-field="email"]').value.trim();
   const password = signupForm.querySelector('[data-field="password"]').value;
 
-  let isValid = true;
-  if (!email) {
-    ui.showFieldError(signupForm, "email", "Email is required.");
-    isValid = false;
-  }
+  let isValid = isEmailFieldValid(signupForm);
   if (!auth.isPasswordValid(password)) {
     ui.showFieldError(signupForm, "password", "Password must be at least 8 characters.");
     isValid = false;
@@ -614,12 +632,9 @@ function handleForgotPasswordSubmit(event) {
   ui.clearAllFieldErrors(forgotPasswordForm);
   ui.showFormError(forgotPasswordForm, "");
 
-  const email = forgotPasswordForm.querySelector('[data-field="email"]').value.trim();
-  if (!email) {
-    ui.showFieldError(forgotPasswordForm, "email", "Email is required.");
-    return;
-  }
+  if (!isEmailFieldValid(forgotPasswordForm)) return;
 
+  const email = forgotPasswordForm.querySelector('[data-field="email"]').value.trim();
   const account = storage.loadAccount();
   if (!account || account.email !== email) {
     ui.showFormError(forgotPasswordForm, "No account found with that email.");
@@ -795,6 +810,8 @@ modalConfirmButton.addEventListener("click", () => {
 
 modalCancelButton.addEventListener("click", closeConfirmationModal);
 
+toastCloseButton.addEventListener("click", ui.hideToast);
+
 // Clicking the dimmed backdrop (not the modal box itself) cancels, the
 // same as clicking the Cancel button.
 modalOverlay.addEventListener("click", (event) => {
@@ -908,6 +925,12 @@ loginForm.addEventListener("submit", handleLoginSubmit);
 signupForm.addEventListener("submit", handleSignupSubmit);
 forgotPasswordForm.addEventListener("submit", handleForgotPasswordSubmit);
 resetPasswordForm.addEventListener("submit", handleResetPasswordSubmit);
+
+// Validate each form's email field as soon as it's blurred, not just on
+// submit — the same pattern already used for the note title field.
+[loginForm, signupForm, forgotPasswordForm].forEach((form) => {
+  form.querySelector('[data-field="email"]').addEventListener("blur", () => isEmailFieldValid(form));
+});
 
 switchToSignupLinks.forEach((link) => {
   link.addEventListener("click", () => ui.showAuthScreen("signup"));
