@@ -936,8 +936,32 @@ body {
   box-shadow: 0 10px 40px rgba(14, 18, 27, 0.25);
 }
 
+.modal-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.modal-icon {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-md);
+  background: var(--color-surface-secondary);
+  color: var(--color-text);
+}
+
+.modal-header-text {
+  flex: 1;
+  padding-top: 2px;
+}
+
 .modal-title {
-  margin: 0 0 8px;
+  margin: 0 0 4px;
   font-size: 18px;
 }
 
@@ -950,7 +974,8 @@ body {
   display: flex;
   justify-content: flex-end;
   gap: 12px;
-  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid var(--color-border);
 }
 
 .btn-danger {

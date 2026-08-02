@@ -11,6 +11,11 @@ import * as ui from "./ui.js";
 import * as themes from "./themes.js";
 import * as auth from "./auth.js";
 
+// Reused as the confirmation modal's icon, matching the same trash/archive
+// icons already used on the Delete Note / Archive Note buttons elsewhere.
+const TRASH_ICON_PATHS = '<path d="M3 6h18" /><path d="M8 6V4h8v2" /><path d="M19 6l-1 14H6L5 6" />';
+const ARCHIVE_ICON_PATHS = '<path d="M21 8v13H3V8" /><path d="M1 3h22v5H1z" /><path d="M10 12h4" />';
+
 // --- Element references ---------------------------------------------------
 // Looked up once, at the top, so every function below can just use them.
 
@@ -238,7 +243,7 @@ function applySelectedTheme() {
 
   themes.applyTheme(theme);
   storage.savePreferences({ theme, font: getCheckedRadioValue(fontThemeRadios) });
-  ui.showToast("Theme updated!");
+  ui.showToast("Settings updated successfully!");
 }
 
 function applySelectedFont() {
@@ -247,7 +252,7 @@ function applySelectedFont() {
 
   themes.applyFont(font);
   storage.savePreferences({ theme: getCheckedRadioValue(colorThemeRadios), font });
-  ui.showToast("Font updated!");
+  ui.showToast("Settings updated successfully!");
 }
 
 // Clears the search box itself (not just the searchQuery state) so the
@@ -392,7 +397,7 @@ function saveSelectedNote() {
   storage.saveNotes(notes);
   storage.clearDraft();
   renderApp();
-  ui.showToast("Note saved!");
+  ui.showToast("Note saved successfully!");
 }
 
 function cancelEditingSelectedNote() {
@@ -444,7 +449,7 @@ function deleteSelectedNote() {
 
   renderApp();
   showNotesView(); // go back to the list view, since the deleted note's detail is gone
-  ui.showToast("Note deleted.");
+  ui.showToast("Note permanently deleted.");
 }
 
 function openDeleteConfirmation() {
@@ -456,6 +461,7 @@ function openDeleteConfirmation() {
     message: "Are you sure you want to permanently delete this note? This action cannot be undone.",
     confirmLabel: "Delete Note",
     isDangerous: true,
+    icon: TRASH_ICON_PATHS,
   });
 }
 
@@ -485,7 +491,7 @@ function restoreSelectedNote() {
   storage.saveNotes(notes);
 
   renderApp();
-  ui.showToast("Note restored.");
+  ui.showToast("Note restored to active notes.", { label: "All Notes", onClick: showAllNotes });
 }
 
 function handleArchiveButtonClick() {
@@ -502,6 +508,7 @@ function handleArchiveButtonClick() {
     message: "Are you sure you want to archive this note? You can find it in the Archived Notes section and restore it anytime.",
     confirmLabel: "Archive Note",
     isDangerous: false,
+    icon: ARCHIVE_ICON_PATHS,
   });
 }
 
@@ -710,7 +717,7 @@ function handleChangePasswordSubmit(event) {
   account.password = newPassword;
   storage.saveAccount(account);
   ui.resetAuthForm(changePasswordForm);
-  ui.showToast("Password updated!");
+  ui.showToast("Password changed successfully!");
 }
 
 // --- Initial render ------------------------------------------------------

@@ -293,17 +293,22 @@ export function hideToast() {
 // archive, ...) instead of building a separate modal per action. Callers
 // pass in the text to show; main.js decides what happens if confirmed.
 
-export function showModal({ title, message, confirmLabel, isDangerous }) {
+// icon is the inner markup (path elements) for the modal's small icon
+// square, so each action (delete, archive, ...) can show its own icon
+// while reusing the same modal element.
+export function showModal({ title, message, confirmLabel, isDangerous, icon }) {
   const overlay = document.querySelector(".modal-overlay");
   const titleField = document.querySelector("#modal-title");
   const messageField = document.querySelector("#modal-message");
   const confirmButton = document.querySelector(".modal-confirm-btn");
+  const iconSvg = document.querySelector(".modal-icon svg");
 
   titleField.textContent = title;
   messageField.textContent = message;
   confirmButton.textContent = confirmLabel;
   confirmButton.classList.toggle("btn-danger", isDangerous);
   confirmButton.classList.toggle("btn-primary", !isDangerous);
+  iconSvg.innerHTML = icon;
 
   overlay.hidden = false;
   confirmButton.focus();

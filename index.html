@@ -407,8 +407,15 @@
        delete vs. archive. -->
   <div class="modal-overlay" hidden>
     <div class="modal" role="alertdialog" aria-modal="true" aria-labelledby="modal-title" aria-describedby="modal-message">
-      <h2 class="modal-title" id="modal-title">Delete Note</h2>
-      <p class="modal-message" id="modal-message">Are you sure you want to permanently delete this note? This action cannot be undone.</p>
+      <div class="modal-header">
+        <div class="modal-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18" /><path d="M8 6V4h8v2" /><path d="M19 6l-1 14H6L5 6" /></svg>
+        </div>
+        <div class="modal-header-text">
+          <h2 class="modal-title" id="modal-title">Delete Note</h2>
+          <p class="modal-message" id="modal-message">Are you sure you want to permanently delete this note? This action cannot be undone.</p>
+        </div>
+      </div>
       <div class="modal-actions">
         <button type="button" class="btn btn-secondary modal-cancel-btn">Cancel</button>
         <button type="button" class="btn btn-danger modal-confirm-btn">Delete Note</button>
