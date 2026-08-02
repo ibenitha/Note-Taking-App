@@ -14,7 +14,7 @@ Then open the printed `localhost` URL.
 
 ## Features
 
-- **Auth (simulated)**: Login, Sign Up, Forgot Password, and Reset Password screens gate the app. There is no backend, so this is a client-side simulation — see "Known simplifications" below.
+- **Auth (simulated)**: Login, Sign Up, Forgot Password, and Reset Password screens gate the app, plus a Change Password panel in Settings. There is no backend, so this is a client-side simulation — see "Known simplifications" below.
 - **Notes**: create, read, update, delete
 - **Archive**: archive/restore notes, with a separate Archived Notes view
 - **Tags**: add tags to a note, filter by tag from a dynamically generated sidebar list
@@ -58,7 +58,7 @@ These were deliberate choices, not oversights — noted here in case they come u
 
 | Feature | How to show it |
 |---|---|
-| Auth (simulated) | Sign Up with any email + 8+ character password (auto-logs you in). Settings → Logout. Log back in with the same credentials. Try "Forgot" → wrong email shows an error, the account's email reveals a "continue to reset" link (simulating the emailed link) → set a new password → log in with it. |
+| Auth (simulated) | Sign Up with any email + 8+ character password (auto-logs you in). Settings → Logout. Log back in with the same credentials. Try "Forgot" → wrong email shows an error, the account's email reveals a "continue to reset" link (simulating the emailed link) → set a new password → log in with it. Or Settings → Change Password (wrong old password / weak new password / mismatched confirm all show inline errors). |
 | Create/Read/Update/Delete | Click "+ Create New Note", fill it in, Save. Edit any field on an existing note and Save. Click Delete Note and confirm. |
 | Archive/Restore | Open a note, click Archive Note, confirm. Click "Archived Notes" in the sidebar to see it; open it and click Restore Note. |
 | Tags | Type tags (comma-separated) into a note, save, then click that tag in the sidebar to filter. |

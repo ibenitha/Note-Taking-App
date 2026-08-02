@@ -798,6 +798,12 @@ body {
   gap: 4px;
 }
 
+.settings-nav-divider {
+  margin: 4px 0;
+  border: none;
+  border-top: 1px solid var(--color-border);
+}
+
 .settings-nav-item {
   display: flex;
   align-items: center;

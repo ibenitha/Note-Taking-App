@@ -64,6 +64,7 @@ const forgotPasswordLink = document.querySelector(".forgot-password-link");
 const passwordToggleButtons = document.querySelectorAll(".password-toggle-btn");
 const googleButtons = document.querySelectorAll(".google-btn");
 const logoutButton = document.querySelector(".logout-btn");
+const changePasswordForm = document.querySelector(".change-password-form");
 
 // --- Session ---------------------------------------------------------------
 // Checked immediately, before anything else renders, so a returning logged-in
@@ -666,6 +667,37 @@ function handleLogout() {
   showNotesView();
 }
 
+function handleChangePasswordSubmit(event) {
+  event.preventDefault();
+  ui.clearAllFieldErrors(changePasswordForm);
+  ui.showFormError(changePasswordForm, "");
+
+  const oldPassword = changePasswordForm.querySelector('[data-field="old-password"]').value;
+  const newPassword = changePasswordForm.querySelector('[data-field="new-password"]').value;
+  const confirmPassword = changePasswordForm.querySelector('[data-field="confirm-new-password"]').value;
+  const account = storage.loadAccount();
+
+  let isValid = true;
+  if (!account || account.password !== oldPassword) {
+    ui.showFieldError(changePasswordForm, "old-password", "Old password is incorrect.");
+    isValid = false;
+  }
+  if (!auth.isPasswordValid(newPassword)) {
+    ui.showFieldError(changePasswordForm, "new-password", "Password must be at least 8 characters.");
+    isValid = false;
+  }
+  if (confirmPassword !== newPassword) {
+    ui.showFieldError(changePasswordForm, "confirm-new-password", "Passwords do not match.");
+    isValid = false;
+  }
+  if (!isValid) return;
+
+  account.password = newPassword;
+  storage.saveAccount(account);
+  ui.resetAuthForm(changePasswordForm);
+  ui.showToast("Password updated!");
+}
+
 // --- Initial render ------------------------------------------------------
 
 renderApp();
@@ -902,3 +934,5 @@ googleButtons.forEach((button) => {
 });
 
 logoutButton.addEventListener("click", handleLogout);
+
+changePasswordForm.addEventListener("submit", handleChangePasswordSubmit);
