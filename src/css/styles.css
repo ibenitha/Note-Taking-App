@@ -69,22 +69,102 @@ textarea:focus-visible {
   --color-bg: #ffffff;
   --color-surface: #ffffff;
   --color-surface-secondary: #f3f5f8; /* active/selected item backgrounds, secondary buttons */
+  --color-header-bg: #f3f5f8;
+  --color-header-surface: #f3f5f8;
   --color-text: #0e121b; /* titles, primary values, active nav text */
   --color-text-secondary: #2b303b; /* icons, inactive nav text, labels, dates */
   --color-text-muted: #717784; /* "Tags" sidebar section heading */
   --color-text-toolbar: #525866; /* mobile toolbar: Go Back, Cancel, icons */
   --color-body-text: #232530; /* note body paragraph text */
   --color-border: #e0e4ea;
+  --color-search-border: #cacfd8;
   --color-tag-bg: #e0e4ea;
   --color-primary: #335cff;
   --color-primary-hover: #2947d1;
   --color-danger: #e5484d;
 
-  --font-body: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  /* Settings menu column (Figma: Desktop - Settings) */
+  --color-settings-nav-border: #e0e4ea;
+  --color-settings-nav-active-bg: #f3f5f8;
+  --color-settings-nav-active-text: #0e121b;
+  --color-settings-nav-inactive-text: #2b303b;
+  --color-settings-nav-divider: #e0e4ea;
+  --color-menu-divider: #f3f5f8;
+  --color-menu-item-active-bg: #ebf1ff;
+  --shadow-bottom-nav: 0 -4px 6px rgba(240, 240, 240, 0.6);
 
-  --radius-sm: 6px;
-  --radius-md: 8px;
+  --font-body: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-weight-bold: 700;
+  --font-weight-semibold: 600;
+  --font-weight-medium: 500;
+  --font-weight-regular: 400;
+
+  /* Typography presets from the style guide */
+  --text-preset-1-font-size: 24px;
+  --text-preset-1-line-height: 120%;
+  --text-preset-1-letter-spacing: -0.5px;
+  --text-preset-1-font-weight: 700;
+
+  --text-preset-2-font-size: 20px;
+  --text-preset-2-line-height: 120%;
+  --text-preset-2-letter-spacing: -0.5px;
+  --text-preset-2-font-weight: 700;
+
+  --text-preset-3-font-size: 16px;
+  --text-preset-3-line-height: 120%;
+  --text-preset-3-letter-spacing: -0.3px;
+  --text-preset-3-font-weight: 600;
+
+  --text-preset-4-font-size: 14px;
+  --text-preset-4-line-height: 120%;
+  --text-preset-4-letter-spacing: -0.2px;
+  --text-preset-4-font-weight: 500;
+
+  --text-preset-5-font-size: 14px;
+  --text-preset-5-line-height: 120%;
+  --text-preset-5-letter-spacing: -0.2px;
+  --text-preset-5-font-weight: 400;
+
+  --text-preset-6-font-size: 12px;
+  --text-preset-6-line-height: 120%;
+  --text-preset-6-letter-spacing: -0.2px;
+  --text-preset-6-font-weight: 400;
+
+  /* Spacing tokens from the style guide */
+  --spacing-0: 0px;
+  --spacing-025: 2px;
+  --spacing-050: 4px;
+  --spacing-075: 6px;
+  --spacing-100: 8px;
+  --spacing-150: 12px;
+  --spacing-200: 16px;
+  --spacing-250: 20px;
+  --spacing-300: 24px;
+  --spacing-400: 32px;
+  --spacing-500: 40px;
+  --spacing-600: 48px;
+  --spacing-800: 64px;
+  --spacing-1000: 80px;
+
+  /* Radius tokens from the style guide */
+  --radius-0: 0px;
+  --radius-4: 4px;
+  --radius-6: 6px;
+  --radius-8: 8px;
+  --radius-10: 10px;
+  --radius-12: 12px;
+  --radius-16: 16px;
+  --radius-20: 20px;
+  --radius-24: 24px;
   --radius-full: 999px;
+
+  --radius-sm: var(--radius-6);
+  --radius-md: var(--radius-8);
+
+  /* Shadow tokens from the style guide */
+  --shadow-small: 0 1px 2px rgba(14, 18, 27, 0.06);
+  --shadow-large: 0 10px 30px rgba(14, 18, 27, 0.15);
+  --shadow-modal: 0 10px 40px rgba(14, 18, 27, 0.25);
 }
 
 html,
@@ -105,25 +185,34 @@ body {
 .app-header {
   display: flex;
   align-items: center;
-  gap: 16px;
-  padding: 14px 20px;
+  gap: var(--spacing-200);
+  padding: var(--spacing-150) var(--spacing-200);
   border-bottom: 1px solid var(--color-border);
-  background: var(--color-surface);
+  background: var(--color-header-bg);
+  min-height: 54px;
 }
 
 .logo {
   display: flex;
   align-items: center;
-  gap: 10px;
-  flex-shrink: 0;
+  gap: var(--spacing-100);
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
+.logo svg {
+  display: block;
+  height: 28px;
+  width: auto;
+  flex: none;
+}
 
 .header-search {
   position: relative;
   display: none; /* shown on desktop, see media query */
-  flex: 1;
-  max-width: 420px;
+  flex: 0 1 300px;
+  width: 100%;
+  max-width: 300px;
   margin-left: auto;
 }
 
@@ -135,28 +224,42 @@ body {
 
 .header-search-icon {
   position: absolute;
-  left: 14px;
+  left: var(--spacing-200);
   top: 50%;
   transform: translateY(-50%);
-  color: var(--color-text-secondary);
+  color: var(--color-text-muted);
   pointer-events: none;
 }
 
 .header-search input {
   width: 100%;
-  padding: 10px 14px 10px 40px;
-  border: 1px solid var(--color-border);
+  height: 44px;
+  padding: 12px 16px 12px 44px;
+  border: 1px solid var(--color-search-border);
   border-radius: var(--radius-md);
   background: var(--color-surface);
   color: var(--color-text);
   font-family: inherit;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.3;
+  letter-spacing: -0.2px;
+  box-shadow: var(--shadow-small);
+}
+
+.header-search input::placeholder {
+  color: var(--color-text-muted);
 }
 
 /* .icon-btn (defined below) also sets display, so this needs the extra
    class to win the specificity tie regardless of source order. */
 .settings-btn.icon-btn {
   display: none; /* shown on desktop, see media query */
-  border: 1px solid var(--color-border);
+  width: 42px;
+  height: 42px;
+  border: none;
+  border-radius: var(--radius-10);
+  color: var(--color-text-muted);
 }
 
 .icon-btn {
@@ -231,19 +334,19 @@ body {
 .sidebar-nav {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  margin-bottom: 16px;
+  gap: var(--spacing-050);
+  margin-bottom: var(--spacing-200);
 }
 
 .sidebar-link {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 10px 12px;
+  gap: var(--spacing-100);
+  padding: 10px var(--spacing-150);
   border-radius: var(--radius-md);
-  font-weight: 500;
-  font-size: 14px;
-  letter-spacing: -0.2px;
+  font-weight: var(--font-weight-medium);
+  font-size: var(--text-preset-4-font-size);
+  letter-spacing: var(--text-preset-4-letter-spacing);
   color: var(--color-text-secondary);
 }
 
@@ -272,11 +375,11 @@ body {
 }
 
 .sidebar-heading {
-  font-size: 14px;
-  font-weight: 500;
-  letter-spacing: -0.2px;
+  font-size: var(--text-preset-4-font-size);
+  font-weight: var(--font-weight-medium);
+  letter-spacing: var(--text-preset-4-letter-spacing);
   color: var(--color-text-muted);
-  margin: 0 0 8px;
+  margin: 0 0 var(--spacing-100);
 }
 
 .tag-list {
@@ -315,13 +418,17 @@ body {
    ========================================================================== */
 
 .panel-title {
-  font-size: 1.6rem;
-  margin: 0 0 16px;
+  font-size: var(--text-preset-1-font-size);
+  font-weight: var(--text-preset-1-font-weight);
+  letter-spacing: var(--text-preset-1-letter-spacing);
+  line-height: var(--text-preset-1-line-height);
+  margin: 0 0 var(--spacing-200);
+  color: var(--color-text);
 }
 
 .create-note-btn {
   width: 100%;
-  margin-bottom: 16px;
+  margin-bottom: var(--spacing-200);
 }
 
 .notes-list {
@@ -332,8 +439,9 @@ body {
 .note-card {
   width: 100%;
   text-align: left;
-  padding: 8px;
-  border-radius: var(--radius-sm);
+  padding: var(--spacing-100);
+  border-radius: var(--radius-6);
+  background: transparent;
 }
 
 .note-card:not(:last-child) {
@@ -352,27 +460,27 @@ body {
 }
 
 .note-card-title {
-  margin: 0 0 12px;
-  font-size: 16px;
-  font-weight: 600;
-  letter-spacing: -0.3px;
+  margin: 0 0 var(--spacing-150);
+  font-size: var(--text-preset-3-font-size);
+  font-weight: var(--text-preset-3-font-weight);
+  letter-spacing: var(--text-preset-3-letter-spacing);
   color: var(--color-text);
 }
 
 .tag-pills {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
-  margin-bottom: 12px;
+  gap: var(--spacing-050);
+  margin-bottom: var(--spacing-150);
 }
 
 .tag-pill {
   padding: 2px 6px;
-  border-radius: 4px;
+  border-radius: var(--radius-4);
   background: var(--color-tag-bg);
   color: var(--color-text);
-  font-size: 12px;
-  letter-spacing: -0.2px;
+  font-size: var(--text-preset-6-font-size);
+  letter-spacing: var(--text-preset-6-letter-spacing);
 }
 
 .note-card-date {
@@ -423,9 +531,9 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
-  padding-bottom: 14px;
-  margin-bottom: 16px;
+  gap: var(--spacing-100);
+  padding-bottom: var(--spacing-150);
+  margin-bottom: var(--spacing-200);
   border-bottom: 1px solid var(--color-border);
 }
 
@@ -489,7 +597,7 @@ body {
 }
 
 .field-error {
-  margin: 0 0 12px;
+  margin: 0 0 var(--spacing-150);
   font-size: 13px;
   color: var(--color-danger);
 }
@@ -511,7 +619,7 @@ body {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   font-size: 14px;
-  box-shadow: 0 10px 30px rgba(14, 18, 27, 0.15);
+  box-shadow: var(--shadow-large);
   z-index: 200;
 }
 
@@ -521,7 +629,7 @@ body {
 
 .toast-icon {
   flex-shrink: 0;
-  color: #22c55e;
+  color: #21c16b;
 }
 
 .toast-message {
@@ -547,18 +655,18 @@ body {
 .note-meta {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  padding-bottom: 16px;
-  margin-bottom: 16px;
+  gap: var(--spacing-100);
+  padding-bottom: var(--spacing-200);
+  margin-bottom: var(--spacing-200);
   border-bottom: 1px solid var(--color-border);
 }
 
 .meta-row {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 14px;
-  letter-spacing: -0.2px;
+  gap: var(--spacing-100);
+  font-size: var(--text-preset-4-font-size);
+  letter-spacing: var(--text-preset-4-letter-spacing);
 }
 
 .meta-row[hidden] {
@@ -616,9 +724,12 @@ body {
 }
 
 .note-detail-footer {
-  gap: 16px;
-  margin-top: 20px;
-  padding-top: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: var(--spacing-200);
+  margin-top: var(--spacing-250);
+  padding-top: var(--spacing-250);
   border-top: 1px solid var(--color-border);
 }
 
@@ -628,8 +739,25 @@ body {
 
 .note-actions-panel {
   flex-direction: column;
-  gap: 10px;
-  padding: 20px;
+  align-items: flex-start;
+  gap: var(--spacing-150);
+  padding: var(--spacing-250) 0 var(--spacing-250) var(--spacing-200);
+  background: var(--color-bg);
+}
+
+.note-actions-panel .btn {
+  width: 100%;
+  max-width: 242px;
+  min-height: 44px;
+  justify-content: flex-start;
+}
+
+.note-actions-panel .btn-outline,
+.note-actions-panel .btn-danger-outline {
+  background: #ffffff;
+  border: 1px solid #cacfd8;
+  border-radius: 8px;
+  color: #0e121b;
 }
 
 /* ==========================================================================
@@ -640,12 +768,12 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  padding: 12px 16px;
+  gap: var(--spacing-100);
+  padding: var(--spacing-150) var(--spacing-200);
   border-radius: var(--radius-md);
-  font-weight: 500;
-  font-size: 14px;
-  letter-spacing: -0.2px;
+  font-weight: var(--font-weight-medium);
+  font-size: var(--text-preset-4-font-size);
+  letter-spacing: var(--text-preset-4-letter-spacing);
   border: 1px solid transparent;
 }
 
@@ -664,13 +792,23 @@ body {
 }
 
 .btn-outline {
-  border-color: var(--color-border);
+  min-height: 44px;
+  padding: 12px 16px;
+  gap: 8px;
+  border: 1px solid var(--color-search-border);
+  border-radius: var(--radius-md);
   color: var(--color-text);
+  background: var(--color-surface);
 }
 
 .btn-danger-outline {
-  border-color: var(--color-border);
-  color: var(--color-danger);
+  min-height: 44px;
+  padding: 12px 16px;
+  gap: 8px;
+  border: 1px solid var(--color-search-border);
+  border-radius: var(--radius-md);
+  color: var(--color-text);
+  background: var(--color-surface);
 }
 
 /* ==========================================================================
@@ -679,34 +817,61 @@ body {
 
 .bottom-nav {
   position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
   bottom: 0;
-  left: 0;
-  right: 0;
   display: flex;
-  justify-content: space-around;
-  padding: 8px 0;
+  align-items: center;
+  justify-content: space-between;
+  width: min(100%, 375px);
+  gap: 0;
+  padding: 12px 16px;
   background: var(--color-surface);
   border-top: 1px solid var(--color-border);
+  box-shadow: var(--shadow-bottom-nav);
+  z-index: 150;
 }
 
 .bottom-nav-item {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
-  font-size: 0.7rem;
+  justify-content: center;
+  gap: 4px;
+  width: 68.6px;
+  height: 32px;
+  margin: 0 auto;
+  padding: 4px 0;
+  border-radius: 4px;
+  font-size: var(--text-preset-6-font-size);
+  line-height: 120%;
+  letter-spacing: -0.2px;
   color: var(--color-text-secondary);
-  padding: 4px 10px;
+}
+
+.bottom-nav-item + .bottom-nav-item {
+  border-left: 1px solid var(--color-menu-divider);
+}
+
+.bottom-nav-item svg {
+  width: 24px;
+  height: 24px;
+  flex: none;
 }
 
 .bottom-nav-item.is-active {
+  background: var(--color-menu-item-active-bg);
+  color: var(--color-primary);
+}
+
+.bottom-nav-item.is-active svg {
   color: var(--color-primary);
 }
 
 .fab {
   position: fixed;
-  right: 20px;
-  bottom: 84px;
+  right: var(--spacing-250);
+  bottom: var(--spacing-800);
   width: 52px;
   height: 52px;
   display: flex;
@@ -715,14 +880,206 @@ body {
   border-radius: 50%;
   background: var(--color-primary);
   color: #ffffff;
-  box-shadow: 0 4px 12px rgba(51, 92, 255, 0.4);
+  box-shadow: var(--shadow-small);
 }
 
 /* ==========================================================================
-   11. Desktop layout
+   11. Tablet layout
+   ========================================================================== */
+
+@media (min-width: 768px) and (max-width: 899px) {
+  .app-header {
+    height: 74px;
+    padding: var(--spacing-200) var(--spacing-400);
+    background: var(--color-header-bg);
+    border-bottom: none;
+  }
+
+  .header-search,
+  .settings-btn.icon-btn {
+    display: none;
+  }
+
+  .logo {
+    width: 100%;
+    flex: 1 1 auto;
+  }
+
+  .bottom-nav {
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: 12px;
+    width: min(100%, 768px);
+    height: 74px;
+    padding: 12px 32px;
+    gap: 0;
+    background: var(--color-surface);
+    border-top: 1px solid var(--color-border);
+    box-shadow: var(--shadow-bottom-nav);
+  }
+
+  .bottom-nav-item {
+    width: 80px;
+    height: 50px;
+    padding: 4px 0;
+    gap: 4px;
+    font-size: var(--text-preset-6-font-size);
+    flex: 0 0 auto;
+  }
+
+  .bottom-nav-item + .bottom-nav-item {
+    border-left: 1px solid var(--color-menu-divider);
+  }
+
+  .app-body {
+    display: grid;
+    grid-template-columns: 240px minmax(0, 1fr);
+    align-items: start;
+    min-height: calc(100vh - 72px);
+    padding-bottom: 0;
+    background: var(--color-bg);
+  }
+
+  .sidebar {
+    display: flex;
+    min-height: calc(100vh - 72px);
+    background: var(--color-bg);
+    border-right: 1px solid var(--color-border);
+  }
+
+  .notes-list-panel,
+  .note-detail-panel {
+    display: block;
+  }
+
+  .notes-list-panel {
+    padding: 20px 16px 20px 20px;
+    border-right: 1px solid var(--color-border);
+    background: var(--color-bg);
+    height: calc(100vh - 72px);
+    overflow-y: auto;
+  }
+
+  .note-detail-panel {
+    padding: 20px 24px;
+    background: var(--color-bg);
+    min-height: calc(100vh - 72px);
+  }
+
+  [data-mobile-view="detail"] .notes-list-panel,
+  [data-mobile-view="list"] .note-detail-panel {
+    display: block;
+  }
+
+  .note-detail-mobile-toolbar,
+  .bottom-nav,
+  .fab {
+    display: none;
+  }
+
+  .create-note-btn.btn {
+    display: flex;
+  }
+}
+
+/* ==========================================================================
+   12. Small mobile refinements
+   ========================================================================== */
+
+@media (max-width: 767px) {
+  .app-header {
+    gap: var(--spacing-150);
+    padding: var(--spacing-150) var(--spacing-200);
+    height: 54px;
+    background: var(--color-header-bg);
+    border-bottom: none;
+  }
+
+  .header-search,
+  .settings-btn.icon-btn {
+    display: none;
+  }
+
+  .logo {
+    width: 100%;
+    flex: 1 1 auto;
+  }
+
+  .panel-title {
+    font-size: 22px;
+  }
+
+  .notes-list-panel,
+  .note-detail-panel {
+    padding: var(--spacing-200);
+  }
+
+  .note-title-input {
+    font-size: var(--text-preset-2-font-size);
+  }
+
+  .bottom-nav {
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: 0;
+    width: min(100%, 375px);
+    padding: 12px 16px;
+    background: var(--color-surface);
+    border-top: 1px solid var(--color-border);
+    box-shadow: var(--shadow-bottom-nav);
+  }
+
+  .bottom-nav-item {
+    width: 68.6px;
+    height: 32px;
+    padding: 4px 0;
+    gap: 4px;
+    font-size: 0;
+  }
+
+  .bottom-nav-item span {
+    display: none;
+  }
+
+  .fab {
+    right: var(--spacing-200);
+    bottom: 76px;
+    width: 56px;
+    height: 56px;
+  }
+}
+
+/* ==========================================================================
+   13. Desktop layout
    ========================================================================== */
 
 @media (min-width: 900px) {
+  /* Figma's desktop composition uses a distinct 81px page header beside the
+     272px navigation rail. These overrides intentionally live only in the
+     desktop query, leaving the tablet and mobile layouts untouched. */
+  body {
+    font-family: "Noto Serif", Georgia, serif;
+  }
+
+  .app-header {
+    height: 81px;
+    min-height: 81px;
+    padding: 0 32px 0 0;
+    gap: 16px;
+    background: var(--color-surface);
+  }
+
+  .logo {
+    flex: 0 0 272px;
+    align-self: stretch;
+    padding: 0 32px;
+    border-right: 1px solid var(--color-border);
+  }
+
+  .header-search {
+    margin-left: auto;
+  }
+
   .header-search {
     display: block;
   }
@@ -732,11 +1089,13 @@ body {
   }
 
   .app-body {
+    position: relative;
     display: grid;
-    grid-template-columns: 272px 290px 1fr 290px;
+    grid-template-columns: 272px 290px minmax(0, 1fr) 258px;
     align-items: start;
-    min-height: calc(100vh - 65px);
+    min-height: calc(100vh - 81px);
     padding-bottom: 0;
+    background: var(--color-bg);
   }
 
   .sidebar,
@@ -749,22 +1108,58 @@ body {
     display: flex;
   }
 
+  .sidebar {
+    width: 272px;
+    min-height: calc(100vh - 81px);
+    background: var(--color-bg);
+    border-right: 1px solid var(--color-border);
+  }
+
   .notes-list-panel {
     padding: 20px 16px 20px 32px;
     border-right: 1px solid var(--color-border);
-    height: 100%;
+    background: var(--color-bg);
+    height: calc(100vh - 81px);
     overflow-y: auto;
   }
 
   .note-detail-panel {
     padding: 20px 24px;
     border-right: 1px solid var(--color-border);
+    background: var(--color-bg);
+    min-height: calc(100vh - 81px);
+    height: calc(100vh - 81px);
+    display: flex;
+    flex-direction: column;
   }
 
-  /* On desktop both panels are always visible, regardless of mobile-view state. */
-  [data-mobile-view] .notes-list-panel,
-  [data-mobile-view] .note-detail-panel {
+  /* The title belongs to the desktop page header, while the note list begins
+     directly below that header with the create button. */
+  .notes-list-panel .panel-title {
+    position: absolute;
+    top: -56px;
+    left: 304px;
+    margin: 0;
+  }
+
+  .note-body-input {
+    min-height: 0;
+    flex: 1;
+  }
+
+  .note-detail-footer {
+    margin-top: auto;
+  }
+
+  /* On desktop both panels are always visible, regardless of mobile-view state.
+     .note-detail-panel needs flex (not block) here, or it loses the column
+     layout set above and .note-body-input's flex: 1 stops having any effect. */
+  [data-mobile-view] .notes-list-panel {
     display: block;
+  }
+
+  [data-mobile-view] .note-detail-panel {
+    display: flex;
   }
 
   .note-detail-mobile-toolbar,
@@ -784,16 +1179,25 @@ body {
 
   .settings-panel {
     grid-column: 2 / -1;
+    padding: 0;
   }
 
-  .settings-body {
-    flex-direction: row;
-    gap: 40px;
+  .settings-panel .panel-title {
+    padding: 26px 32px 0;
+    margin-bottom: 0;
   }
 
   .settings-nav {
-    width: 220px;
-    flex-shrink: 0;
+    flex: 0 0 258px;
+    width: 258px;
+    padding: 20px 16px 20px 32px;
+    border-right: 1px solid var(--color-settings-nav-border);
+  }
+
+  .settings-content {
+    flex: 1;
+    min-width: 0;
+    padding: 32px 32px 20px;
   }
 }
 
@@ -824,30 +1228,64 @@ body {
 .settings-body {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  align-items: stretch;
+  gap: var(--spacing-300);
+}
+
+@media (min-width: 900px) {
+  /* Must follow the mobile column rule above — same specificity, later in file wins */
+  .settings-body {
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 0;
+  }
+}
+
+.settings-content {
+  min-width: 0;
 }
 
 .settings-nav {
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  align-items: flex-start;
+  gap: var(--spacing-100);
+  align-self: flex-start;
 }
 
 .settings-nav-divider {
-  margin: 4px 0;
+  align-self: stretch;
+  width: 100%;
+  height: 1px;
+  margin: 0;
   border: none;
-  border-top: 1px solid var(--color-border);
+  background: var(--color-settings-nav-divider);
 }
 
 .settings-nav-item {
+  box-sizing: border-box;
   display: flex;
+  flex-direction: row;
   align-items: center;
-  gap: 10px;
-  padding: 10px 12px;
-  border-radius: var(--radius-md);
-  font-weight: 500;
-  font-size: 14px;
-  color: var(--color-text-secondary);
+  align-self: stretch;
+  flex: none;
+  gap: var(--spacing-100);
+  width: 100%;
+  height: 36px;
+  padding: var(--spacing-100);
+  border-radius: var(--radius-sm);
+  font-weight: var(--font-weight-medium);
+  font-size: var(--text-preset-4-font-size);
+  line-height: var(--text-preset-4-line-height);
+  letter-spacing: var(--text-preset-4-letter-spacing);
+  color: var(--color-settings-nav-inactive-text);
+}
+
+.settings-nav-item svg {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
 }
 
 .settings-nav-item span {
@@ -858,25 +1296,38 @@ body {
 .settings-nav-chevron {
   display: none;
   flex-shrink: 0;
+  width: 6px;
+  height: 10px;
 }
 
-.settings-nav-item:hover {
-  background: var(--color-surface-secondary);
+.settings-nav-item:hover:not(.is-active) {
+  background: var(--color-settings-nav-active-bg);
 }
 
 .settings-nav-item.is-active {
-  background: var(--color-surface-secondary);
-  color: var(--color-text);
+  background: var(--color-settings-nav-active-bg);
+  color: var(--color-settings-nav-active-text);
+}
+
+.settings-nav-item.is-active > svg:first-of-type {
+  color: var(--color-settings-nav-active-text);
+}
+
+[data-theme="dark"] .settings-nav-item.is-active > svg:first-of-type {
+  color: var(--color-primary);
 }
 
 .settings-nav-item.is-active .settings-nav-chevron {
   display: block;
+  color: var(--color-settings-nav-active-text);
 }
 
 .settings-section {
   border: none;
   margin: 0;
   padding: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 .settings-section[hidden] {
@@ -884,32 +1335,54 @@ body {
 }
 
 .settings-section legend {
-  font-size: 20px;
-  font-weight: 700;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.3px;
   color: var(--color-text);
   padding: 0;
+  margin-bottom: 0;
 }
 
 .settings-hint {
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.3;
+  letter-spacing: -0.2px;
   color: var(--color-text-secondary);
-  margin: 4px 0 16px;
+  margin: 4px 0 0;
+}
+
+.theme-options {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-200);
+  margin: var(--spacing-300) 0;
 }
 
 .theme-option {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
-  padding: 14px 16px;
-  margin-bottom: 12px;
+  gap: var(--spacing-200);
+  min-height: 72px;
+  padding: var(--spacing-200);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-12);
   cursor: pointer;
 }
 
 .theme-option:has(input:checked) {
   background: var(--color-surface-secondary);
-  border-color: var(--color-primary);
+  border-color: var(--color-border);
+}
+
+.apply-theme-btn,
+.apply-font-btn {
+  align-self: flex-end;
+  min-height: 41px;
+  padding: 12px 16px;
+  line-height: 1.2;
 }
 
 /* Keeps the radio input first in the HTML (so keyboard/tab order and
@@ -917,6 +1390,42 @@ body {
    last, to match the Figma layout. */
 .theme-option input {
   order: 2;
+}
+
+/* A custom radio: the input itself is the outer circle, and ::after is
+   the inner dot, matching Figma's two-rectangle structure exactly. */
+.theme-option input[type="radio"] {
+  appearance: none;
+  position: relative;
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  flex-shrink: 0;
+  border: none;
+  border-radius: 50%;
+  background: var(--color-border);
+  cursor: pointer;
+}
+
+.theme-option input[type="radio"]::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--color-surface);
+  transform: translate(-50%, -50%);
+}
+
+.theme-option input[type="radio"]:checked {
+  background: var(--color-primary);
+}
+
+.theme-option input[type="radio"]:checked::after {
+  width: 8px;
+  height: 8px;
 }
 
 .theme-option-icon {
@@ -927,7 +1436,7 @@ body {
   height: 40px;
   flex-shrink: 0;
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-12);
   background: var(--color-surface);
   color: var(--color-text);
 }
@@ -935,11 +1444,22 @@ body {
 .theme-option-text {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: var(--spacing-075);
   flex: 1;
 }
 
+.theme-option-text strong {
+  font-weight: var(--font-weight-medium);
+  font-size: var(--text-preset-4-font-size);
+  line-height: var(--text-preset-4-line-height);
+  letter-spacing: var(--text-preset-4-letter-spacing);
+  color: var(--color-text);
+}
+
 .theme-option-text small {
+  font-size: var(--text-preset-6-font-size);
+  line-height: var(--text-preset-6-line-height);
+  letter-spacing: var(--text-preset-6-letter-spacing);
   color: var(--color-text-secondary);
 }
 
@@ -968,7 +1488,7 @@ body {
   padding: 24px;
   background: var(--color-surface);
   border-radius: var(--radius-md);
-  box-shadow: 0 10px 40px rgba(14, 18, 27, 0.25);
+  box-shadow: var(--shadow-modal);
 }
 
 .modal-header {
@@ -1025,16 +1545,27 @@ body {
    ========================================================================== */
 
 [data-theme="dark"] {
-  --color-bg: #0b0d12;
-  --color-surface: #12141b;
-  --color-surface-secondary: #1c1f28;
-  --color-text: #f3f5f8;
-  --color-text-secondary: #b7bcc7;
-  --color-text-muted: #8b93a3;
-  --color-text-toolbar: #a7adb8;
-  --color-body-text: #d8dbe2;
-  --color-border: #262a35;
-  --color-tag-bg: #262a35;
+  --color-bg: #0e121b;
+  --color-surface: #0e121b;
+  --color-surface-secondary: #232530;
+  --color-header-bg: #232530;
+  --color-header-surface: #232530;
+  --color-text: #ffffff;
+  --color-text-secondary: #cacfd8;
+  --color-text-muted: #99a0ae;
+  --color-text-toolbar: #99a0ae;
+  --color-body-text: #f3f5f8;
+  --color-border: #232530;
+  --color-search-border: #525866;
+  --color-tag-bg: #2b303b;
+  --color-settings-nav-border: #232530;
+  --color-settings-nav-active-bg: #232530;
+  --color-settings-nav-active-text: #ffffff;
+  --color-settings-nav-inactive-text: #e0e4ea;
+  --color-settings-nav-divider: #232530;
+  --color-menu-divider: #232530;
+  --color-menu-item-active-bg: #ebf1ff;
+  --shadow-bottom-nav: 0 -5px 6px rgba(0, 0, 0, 0.5);
 }
 
 /* ==========================================================================
@@ -1075,17 +1606,17 @@ body {
 .auth-card {
   width: 100%;
   max-width: 448px;
-  padding: 40px;
+  padding: var(--spacing-500);
   background: var(--color-surface);
-  border-radius: 16px;
-  box-shadow: 0 10px 40px rgba(14, 18, 27, 0.1);
+  border-radius: var(--radius-16);
+  box-shadow: var(--shadow-modal);
 }
 
 .auth-logo {
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 24px;
+  margin-bottom: var(--spacing-300);
 }
 
 .auth-screen[hidden] {
@@ -1093,14 +1624,14 @@ body {
 }
 
 .auth-title {
-  margin: 0 0 8px;
-  font-size: 24px;
+  margin: 0 0 var(--spacing-100);
+  font-size: var(--text-preset-1-font-size);
   text-align: center;
   color: var(--color-text);
 }
 
 .auth-subtitle {
-  margin: 0 0 28px;
+  margin: 0 0 var(--spacing-300);
   text-align: center;
   color: var(--color-text-secondary);
 }
@@ -1111,10 +1642,9 @@ body {
 }
 
 .auth-label {
-  margin-bottom: 6px;
-  font-weight: 500;
-  font-size: 14px;
-  color: var(--color-text);
+  margin-bottom: var(--spacing-075);
+  font-weight: var(--font-weight-medium);
+  font-size: var(--text-preset-4-font-size);
 }
 
 .auth-label-row {
@@ -1125,14 +1655,14 @@ body {
 
 .auth-input {
   width: 100%;
-  padding: 12px 14px;
-  margin-bottom: 16px;
+  padding: var(--spacing-150) 14px;
+  margin-bottom: var(--spacing-200);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   background: var(--color-surface);
   color: var(--color-text);
   font-family: inherit;
-  font-size: 14px;
+  font-size: var(--text-preset-4-font-size);
 }
 
 .auth-input.has-error {
@@ -1184,7 +1714,7 @@ body {
   display: flex;
   align-items: center;
   gap: 12px;
-  margin: 24px 0;
+  margin: var(--spacing-300) 0;
   color: var(--color-text-secondary);
   font-size: 13px;
 }
@@ -1202,10 +1732,10 @@ body {
 }
 
 .auth-footer-text {
-  margin: 20px 0 0;
+  margin: var(--spacing-250) 0 0;
   text-align: center;
   color: var(--color-text-secondary);
-  font-size: 14px;
+  font-size: var(--text-preset-4-font-size);
 }
 
 .link-btn {
