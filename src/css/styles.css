@@ -741,7 +741,7 @@ body {
   flex-direction: column;
   align-items: flex-start;
   gap: var(--spacing-150);
-  padding: var(--spacing-250) 0 var(--spacing-250) var(--spacing-200);
+  padding: var(--spacing-250) var(--spacing-200);
   background: var(--color-bg);
 }
 
@@ -1094,6 +1094,7 @@ body {
     grid-template-columns: 272px 290px minmax(0, 1fr) 258px;
     align-items: start;
     min-height: calc(100vh - 81px);
+    max-width: 1440px;
     padding-bottom: 0;
     background: var(--color-bg);
   }
