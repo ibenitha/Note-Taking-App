@@ -741,7 +741,7 @@ body {
   flex-direction: column;
   align-items: flex-start;
   gap: var(--spacing-150);
-  width: 258px;
+  width: 58px;
   padding: var(--spacing-250) 0 var(--spacing-250) var(--spacing-200);
   background: var(--color-bg);
 }
@@ -1092,7 +1092,7 @@ body {
   .app-body {
     position: relative;
     display: grid;
-    grid-template-columns: 272px 290px minmax(0, 1fr) 290px;
+    grid-template-columns: 324px 290px minmax(0, 1fr) 310px;
     align-items: start;
     min-height: calc(100vh - 81px);
     max-width: 1440px;
