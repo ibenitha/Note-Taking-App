@@ -64,6 +64,22 @@ const searchForm = document.querySelector(".header-search");
 const searchInput = document.querySelector("#search-input");
 const mobileSearchButton = document.querySelector(".mobile-search-btn");
 
+// Mobile-only panels and their controls
+const mobileSearchPanel = document.querySelector(".mobile-search-panel");
+const mobileSearchInput = document.querySelector("#mobile-search-input");
+const mobileSearchSubtitle = document.querySelector(".mobile-search-subtitle");
+const mobileSearchResultsList = document.querySelector(".mobile-search-results");
+const mobileTagsButton = document.querySelector(".mobile-tags-btn");
+const mobileTagsPanel = document.querySelector(".mobile-tags-panel");
+const mobileTagsList = document.querySelector(".mobile-tags-list");
+const mobileTagDetailPanel = document.querySelector(".mobile-tag-detail-panel");
+const mobileTagBackButton = document.querySelector(".mobile-tag-back-btn");
+const mobileTagDetailTitle = document.querySelector(".mobile-tag-detail-title strong");
+const mobileTagDetailSubtitle = document.querySelector(".mobile-tag-detail-subtitle");
+const mobileTagDetailList = document.querySelector(".mobile-tag-detail-list");
+const mobileSettingsBackButton = document.querySelector(".mobile-settings-back-btn");
+const mobileSettingsSubContent = document.querySelector(".mobile-settings-sub-content");
+
 const loginForm = document.querySelector('[data-auth-form="login"]');
 const signupForm = document.querySelector('[data-auth-form="signup"]');
 const forgotPasswordForm = document.querySelector('[data-auth-form="forgot-password"]');
@@ -218,6 +234,7 @@ function renderApp() {
   ui.renderNoteDetail(getSelectedNote());
   ui.renderTagList(noteManager.getUniqueTags(notes), activeTag);
   updateSaveButtonState();
+  renderPanelSubtitle();
 
   if (focusWasInNotesList) {
     const activeCard = notesList.querySelector(".note-card.is-active");
@@ -231,10 +248,237 @@ function showNotesView() {
   document.body.dataset.appView = "notes";
   document.body.dataset.mobileView = "list";
   document.body.dataset.mobileSearch = "closed";
+  delete document.body.dataset.mobileSettingsView;
+  // Update panel subtitle for archived / tag views
+  renderPanelSubtitle();
 }
 
 function showSettingsView() {
   document.body.dataset.appView = "settings";
+  delete document.body.dataset.mobileSettingsView;
+}
+
+// Show a mobile settings sub-panel by cloning the matching fieldset into
+// the mobile sub-panel container and re-wiring the apply buttons.
+function showMobileSettingsSubPanel(sectionKey) {
+  // Clone the relevant settings fieldset
+  const source = document.querySelector(`.settings-section[data-settings-panel="${sectionKey}"]`);
+  if (!source) return;
+
+  mobileSettingsSubContent.innerHTML = "";
+
+  // Add a heading that mirrors the fieldset legend
+  const title = document.createElement("h1");
+  title.className = "panel-title";
+  title.textContent = source.querySelector("legend").textContent;
+  mobileSettingsSubContent.appendChild(title);
+
+  // Clone the hint + options/form (everything after the legend)
+  Array.from(source.children).forEach((child) => {
+    if (child.tagName !== "LEGEND") {
+      mobileSettingsSubContent.appendChild(child.cloneNode(true));
+    }
+  });
+
+  // Re-wire radio inputs so they actually check — clones lose event state
+  mobileSettingsSubContent.querySelectorAll('input[name="color-theme"]').forEach((radio) => {
+    const currentTheme = document.documentElement.dataset.theme || "light";
+    radio.checked = radio.value === currentTheme;
+    radio.addEventListener("change", () => {
+      document.querySelectorAll('input[name="color-theme"]').forEach((r) => {
+        r.checked = r.value === radio.value;
+      });
+    });
+  });
+  mobileSettingsSubContent.querySelectorAll('input[name="font-theme"]').forEach((radio) => {
+    const currentFont = document.documentElement.dataset.font || "sans-serif";
+    radio.checked = radio.value === currentFont;
+    radio.addEventListener("change", () => {
+      document.querySelectorAll('input[name="font-theme"]').forEach((r) => {
+        r.checked = r.value === radio.value;
+      });
+    });
+  });
+
+  // Wire apply buttons in the cloned content
+  const applyCloneTheme = mobileSettingsSubContent.querySelector(".apply-theme-btn");
+  if (applyCloneTheme) applyCloneTheme.addEventListener("click", applySelectedTheme);
+
+  const applyCloneFont = mobileSettingsSubContent.querySelector(".apply-font-btn");
+  if (applyCloneFont) applyCloneFont.addEventListener("click", applySelectedFont);
+
+  // Wire password form submit in the cloned content
+  const clonedPasswordForm = mobileSettingsSubContent.querySelector(".change-password-form");
+  if (clonedPasswordForm) {
+    // Wire password toggles
+    clonedPasswordForm.querySelectorAll(".password-toggle-btn").forEach((btn) => {
+      btn.addEventListener("click", () => ui.togglePasswordVisibility(btn));
+    });
+    clonedPasswordForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      ui.clearAllFieldErrors(clonedPasswordForm);
+      ui.showFormError(clonedPasswordForm, "");
+      const oldPassword = clonedPasswordForm.querySelector('[data-field="old-password"]').value;
+      const newPassword = clonedPasswordForm.querySelector('[data-field="new-password"]').value;
+      const confirmPassword = clonedPasswordForm.querySelector('[data-field="confirm-new-password"]').value;
+      const account = storage.loadAccount();
+      let isValid = true;
+      if (!account || account.password !== oldPassword) {
+        ui.showFieldError(clonedPasswordForm, "old-password", "Old password is incorrect.");
+        isValid = false;
+      }
+      if (!auth.isPasswordValid(newPassword)) {
+        ui.showFieldError(clonedPasswordForm, "new-password", "Password must be at least 8 characters.");
+        isValid = false;
+      }
+      if (confirmPassword !== newPassword) {
+        ui.showFieldError(clonedPasswordForm, "confirm-new-password", "Passwords do not match.");
+        isValid = false;
+      }
+      if (!isValid) return;
+      account.password = newPassword;
+      storage.saveAccount(account);
+      clonedPasswordForm.reset();
+      ui.showToast("Password changed successfully!");
+    });
+  }
+
+  document.body.dataset.appView = "settings";
+  document.body.dataset.mobileSettingsView = "sub";
+}
+
+// Renders the subtitle text under the panel title on mobile list views.
+function renderPanelSubtitle() {
+  const subtitle = document.querySelector(".panel-subtitle");
+  if (!subtitle) return;
+  if (showingArchived && activeTag === null && searchQuery === "") {
+    subtitle.textContent = "All your archived notes are stored here. You can restore or delete them anytime.";
+    subtitle.hidden = false;
+  } else {
+    subtitle.hidden = true;
+  }
+}
+
+// Mobile search page — renders live results into the mobile search results list.
+function handleMobileSearchInput() {
+  const query = mobileSearchInput.value.trim();
+  searchQuery = query;
+  mobileSearchResultsList.innerHTML = "";
+
+  if (query === "") {
+    mobileSearchSubtitle.textContent = "";
+    return;
+  }
+
+  const results = noteManager.searchNotes(notes, query);
+  mobileSearchSubtitle.textContent = results.length > 0
+    ? `All notes matching "${query}" are displayed below.`
+    : `No notes found for "${query}".`;
+
+  if (results.length === 0) return;
+
+  results.forEach((note) => {
+    const card = createMobileNoteCard(note);
+    mobileSearchResultsList.appendChild(card);
+  });
+}
+
+// Builds a lightweight note card for the mobile search / tag-detail lists
+// (uses the same DOM structure as createNoteCard in ui.js so styles apply).
+function createMobileNoteCard(note) {
+  const li = document.createElement("li");
+  const btn = document.createElement("button");
+  btn.type = "button";
+  btn.className = "note-card";
+  btn.dataset.noteId = note.id;
+
+  const title = document.createElement("h3");
+  title.className = "note-card-title";
+  title.textContent = note.title;
+
+  const pills = document.createElement("div");
+  pills.className = "tag-pills";
+  note.tags.forEach((tag) => {
+    const pill = document.createElement("span");
+    pill.className = "tag-pill";
+    pill.textContent = tag;
+    pills.appendChild(pill);
+  });
+
+  const date = document.createElement("time");
+  date.className = "note-card-date";
+  const d = new Date(note.timestamp);
+  date.textContent = `${String(d.getDate()).padStart(2, "0")} ${d.toLocaleString("en-US", { month: "short" })} ${d.getFullYear()}`;
+
+  btn.append(title, pills, date);
+  li.appendChild(btn);
+
+  btn.addEventListener("click", () => {
+    selectedNoteId = note.id;
+    renderApp();
+    document.body.dataset.mobileView = "detail";
+  });
+
+  return li;
+}
+
+// Renders the mobile Tags list page.
+function renderMobileTagsList() {
+  const tags = noteManager.getUniqueTags(notes);
+  mobileTagsList.innerHTML = "";
+
+  if (tags.length === 0) {
+    const li = document.createElement("li");
+    li.className = "empty-state";
+    li.textContent = "No tags yet. Add tags to your notes to see them here.";
+    mobileTagsList.appendChild(li);
+    return;
+  }
+
+  tags.forEach((tag) => {
+    const li = document.createElement("li");
+    const btn = document.createElement("button");
+    btn.className = "mobile-tag-list-item";
+    btn.dataset.tag = tag;
+
+    const svgNS = "http://www.w3.org/2000/svg";
+    const svg = document.createElementNS(svgNS, "svg");
+    svg.setAttribute("width", "20"); svg.setAttribute("height", "20");
+    svg.setAttribute("viewBox", "0 0 24 24"); svg.setAttribute("fill", "none");
+    svg.setAttribute("stroke", "currentColor"); svg.setAttribute("stroke-width", "1.8");
+    svg.setAttribute("stroke-linecap", "round"); svg.setAttribute("stroke-linejoin", "round");
+    svg.setAttribute("aria-hidden", "true");
+    const p1 = document.createElementNS(svgNS, "path");
+    p1.setAttribute("fill-rule", "evenodd"); p1.setAttribute("clip-rule", "evenodd");
+    p1.setAttribute("d", "M3.01582 5.96647C3.01874 4.5547 4.08608 3.28888 5.47158 3.0505C5.75568 3.00088 9.08808 3.00769 10.4668 3.00866C11.8309 3.00964 12.9936 3.50001 13.9568 4.4613C16.002 6.50257 18.0452 8.5458 20.0855 10.591C21.2929 11.8004 21.3095 13.6568 20.1069 14.8701C18.3721 16.6214 16.6285 18.364 14.8782 20.0988C13.6659 21.3004 11.8095 21.2848 10.5991 20.0774C8.53544 18.0195 6.47178 15.9617 4.41688 13.8951C3.62197 13.0954 3.15301 12.1292 3.0489 10.9996C2.96522 10.0967 3.01387 6.73998 3.01582 5.96647Z");
+    const p2 = document.createElementNS(svgNS, "path");
+    p2.setAttribute("fill-rule", "evenodd"); p2.setAttribute("clip-rule", "evenodd");
+    p2.setAttribute("d", "M9.90712 8.31531C9.90322 9.18514 9.17642 9.90027 8.29784 9.89832C7.42509 9.89638 6.69828 9.1686 6.70315 8.30169C6.70899 7.39683 7.42509 6.69144 8.33578 6.69533C9.19977 6.69825 9.91101 7.43089 9.90712 8.31531Z");
+    svg.append(p1, p2);
+
+    const span = document.createElement("span");
+    span.textContent = tag;
+
+    btn.append(svg, span);
+    li.appendChild(btn);
+    mobileTagsList.appendChild(li);
+  });
+}
+
+// Shows the mobile tag detail panel for the given tag.
+function showMobileTagDetail(tag) {
+  activeTag = tag;
+  showingArchived = false;
+  const tagged = noteManager.filterByTag(notes.filter((n) => !n.archived), tag);
+  mobileTagDetailTitle.textContent = tag;
+  mobileTagDetailSubtitle.textContent = `All notes with the "${tag}" tag are shown here.`;
+  mobileTagDetailList.innerHTML = "";
+  tagged.forEach((note) => {
+    mobileTagDetailList.appendChild(createMobileNoteCard(note));
+  });
+  // Update nav active state to tags
+  ui.setActiveNav("tags");
+  document.body.dataset.mobileView = "tag-detail";
 }
 
 // --- Theme & font settings -------------------------------------------------
@@ -286,7 +530,12 @@ function showArchivedNotes() {
   const visibleNotes = getVisibleNotes();
   selectedNoteId = visibleNotes.length > 0 ? visibleNotes[0].id : null;
   renderApp();
-  showNotesView();
+  // Show the archived panel on mobile — same as list view but shows archived notes
+  document.body.dataset.appView = "notes";
+  document.body.dataset.mobileView = "list";
+  document.body.dataset.mobileSearch = "closed";
+  delete document.body.dataset.mobileSettingsView;
+  renderPanelSubtitle();
 }
 
 function showTagFilter(tag) {
@@ -307,9 +556,17 @@ function handleSearchInput() {
 }
 
 function openMobileSearch() {
+  // Reset mobile search state
+  searchQuery = "";
+  mobileSearchInput.value = "";
+  mobileSearchSubtitle.textContent = "";
+  mobileSearchResultsList.innerHTML = "";
+  // Switch to mobile search view
   document.body.dataset.appView = "notes";
-  document.body.dataset.mobileSearch = "open";
-  searchInput.focus();
+  document.body.dataset.mobileView = "search";
+  delete document.body.dataset.mobileSettingsView;
+  ui.setActiveNav("search");
+  mobileSearchInput.focus();
 }
 
 // --- Create / save / cancel note ----------------------------------------
@@ -762,7 +1019,16 @@ notesList.addEventListener("click", (event) => {
 });
 
 backButton.addEventListener("click", () => {
-  document.body.dataset.mobileView = "list";
+  // Go back to the view the user came from
+  if (showingArchived) {
+    document.body.dataset.mobileView = "list";
+  } else if (activeTag !== null) {
+    document.body.dataset.mobileView = "tag-detail";
+  } else if (searchQuery !== "") {
+    document.body.dataset.mobileView = "search";
+  } else {
+    document.body.dataset.mobileView = "list";
+  }
 });
 
 // Same event delegation pattern as the notes list: one listener on the
@@ -784,6 +1050,62 @@ searchInput.addEventListener("input", handleSearchInput);
 mobileSearchButton.addEventListener("click", (event) => {
   event.preventDefault();
   openMobileSearch();
+});
+
+// Mobile search input — live results
+mobileSearchInput.addEventListener("input", handleMobileSearchInput);
+
+// Mobile tags nav button
+mobileTagsButton.addEventListener("click", (event) => {
+  event.preventDefault();
+  renderMobileTagsList();
+  document.body.dataset.appView = "notes";
+  document.body.dataset.mobileView = "tags";
+  delete document.body.dataset.mobileSettingsView;
+  ui.setActiveNav("tags");
+});
+
+// Mobile tags list — click a tag to see its notes
+mobileTagsList.addEventListener("click", (event) => {
+  const btn = event.target.closest(".mobile-tag-list-item");
+  if (!btn) return;
+  showMobileTagDetail(btn.dataset.tag);
+});
+
+// Mobile tag detail back button — back to tags list
+mobileTagBackButton.addEventListener("click", () => {
+  activeTag = null;
+  renderMobileTagsList();
+  document.body.dataset.mobileView = "tags";
+  ui.setActiveNav("tags");
+});
+
+// Mobile settings sub-panel back button — back to settings list
+mobileSettingsBackButton.addEventListener("click", () => {
+  delete document.body.dataset.mobileSettingsView;
+  document.body.dataset.appView = "settings";
+});
+
+// Settings nav items — on mobile navigate to sub-panel; on desktop switch section
+settingsNav.addEventListener("click", (event) => {
+  const clickedItem = event.target.closest(".settings-nav-item");
+  if (!clickedItem) return;
+  if (!clickedItem.dataset.settingsSection) return;
+
+  const targetSection = clickedItem.dataset.settingsSection;
+  const isMobile = window.innerWidth < 900;
+
+  if (isMobile) {
+    showMobileSettingsSubPanel(targetSection);
+  } else {
+    // Desktop: switch visible section
+    settingsNavItems.forEach((item) => {
+      item.classList.toggle("is-active", item === clickedItem);
+    });
+    settingsSections.forEach((section) => {
+      section.hidden = section.dataset.settingsPanel !== targetSection;
+    });
+  }
 });
 
 createNoteButton.addEventListener("click", createNewNote);
@@ -911,24 +1233,7 @@ archivedNotesLinks.forEach((link) => {
   });
 });
 
-// Inside Settings, clicking a nav item (Color Theme / Font Theme) shows
-// the matching section and hides the others. One delegated listener on
-// the settings-nav container handles clicks on any of its buttons.
-settingsNav.addEventListener("click", (event) => {
-  const clickedItem = event.target.closest(".settings-nav-item");
-  if (!clickedItem) return;
-  if (!clickedItem.dataset.settingsSection) return; // Logout is an action, not a tab — it has its own listener
-
-  const targetSection = clickedItem.dataset.settingsSection;
-
-  settingsNavItems.forEach((item) => {
-    item.classList.toggle("is-active", item === clickedItem);
-  });
-
-  settingsSections.forEach((section) => {
-    section.hidden = section.dataset.settingsPanel !== targetSection;
-  });
-});
+// (Settings nav click handler is defined above in the mobile section — handles both mobile sub-panel and desktop tab switching)
 
 applyThemeButton.addEventListener("click", applySelectedTheme);
 applyFontButton.addEventListener("click", applySelectedFont);

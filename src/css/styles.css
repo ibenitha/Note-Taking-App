@@ -240,10 +240,10 @@ body {
   background: var(--color-surface);
   color: var(--color-text);
   font-family: inherit;
-  font-size: 14px;
-  font-weight: 400;
-  line-height: 1.3;
-  letter-spacing: -0.2px;
+  font-size: var(--text-preset-5-font-size);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--text-preset-5-line-height);
+  letter-spacing: var(--text-preset-5-letter-spacing);
   box-shadow: var(--shadow-small);
 }
 
@@ -317,6 +317,14 @@ body {
    and FAB (which belong to the list/home view) hide while it's open. */
 [data-mobile-view="detail"] .bottom-nav,
 [data-mobile-view="detail"] .fab {
+  display: none;
+}
+
+/* Also hide new mobile panels when not in their respective view */
+.mobile-search-panel,
+.mobile-tags-panel,
+.mobile-tag-detail-panel,
+.mobile-settings-sub-panel {
   display: none;
 }
 
@@ -394,9 +402,10 @@ body {
   gap: 8px;
   padding: 10px 12px;
   border-radius: var(--radius-md);
-  font-size: 14px;
-  font-weight: 500;
-  letter-spacing: -0.2px;
+  font-size: var(--text-preset-4-font-size);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--text-preset-4-line-height);
+  letter-spacing: var(--text-preset-4-letter-spacing);
   color: var(--color-text-secondary);
 }
 
@@ -485,8 +494,9 @@ body {
 
 .note-card-date {
   display: block;
-  font-size: 12px;
-  letter-spacing: -0.2px;
+  font-size: var(--text-preset-6-font-size);
+  line-height: var(--text-preset-6-line-height);
+  letter-spacing: var(--text-preset-6-letter-spacing);
   color: var(--color-text-secondary);
 }
 
@@ -495,7 +505,9 @@ body {
   align-items: center;
   gap: 4px;
   margin-top: 4px;
-  font-size: 12px;
+  font-size: var(--text-preset-6-font-size);
+  line-height: var(--text-preset-6-line-height);
+  letter-spacing: var(--text-preset-6-letter-spacing);
   color: var(--color-text-secondary);
 }
 
@@ -505,8 +517,10 @@ body {
   gap: 4px;
   margin: 0 0 16px;
   padding: 0;
-  font-size: 13px;
-  font-weight: 500;
+  font-size: var(--text-preset-4-font-size);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--text-preset-4-line-height);
+  letter-spacing: var(--text-preset-4-letter-spacing);
   color: var(--color-primary);
 }
 
@@ -519,8 +533,11 @@ body {
   background: var(--color-surface-secondary);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
-  color: var(--color-text-secondary);
+  font-size: var(--text-preset-5-font-size);
+  font-weight: var(--font-weight-regular);
   line-height: 1.5;
+  letter-spacing: var(--text-preset-5-letter-spacing);
+  color: var(--color-text-secondary);
 }
 
 /* ==========================================================================
@@ -541,8 +558,9 @@ body {
   display: flex;
   align-items: center;
   gap: 4px;
-  font-size: 14px;
-  letter-spacing: -0.2px;
+  font-size: var(--text-preset-5-font-size);
+  line-height: var(--text-preset-5-line-height);
+  letter-spacing: var(--text-preset-5-letter-spacing);
   color: var(--color-text-toolbar);
 }
 
@@ -560,9 +578,10 @@ body {
 
 .text-btn {
   padding: 6px 10px;
-  font-size: 14px;
-  font-weight: 400;
-  letter-spacing: -0.2px;
+  font-size: var(--text-preset-5-font-size);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--text-preset-5-line-height);
+  letter-spacing: var(--text-preset-5-letter-spacing);
   color: var(--color-text-toolbar);
 }
 
@@ -576,15 +595,13 @@ body {
   border: none;
   background: transparent;
   font-family: inherit;
-  font-size: 24px;
-  font-weight: 700;
-  letter-spacing: -0.5px;
-  line-height: 1.2;
+  font-size: var(--text-preset-1-font-size);
+  font-weight: var(--text-preset-1-font-weight);
+  letter-spacing: var(--text-preset-1-letter-spacing);
+  line-height: var(--text-preset-1-line-height);
   color: var(--color-text);
   margin: 0 0 4px;
   padding: 0;
-  /* A single-line <input> can't wrap onto a second line like the original
-     heading did; truncate with an ellipsis instead of clipping mid-letter. */
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -598,7 +615,9 @@ body {
 
 .field-error {
   margin: 0 0 var(--spacing-150);
-  font-size: 13px;
+  font-size: var(--text-preset-6-font-size);
+  line-height: var(--text-preset-6-line-height);
+  letter-spacing: var(--text-preset-6-letter-spacing);
   color: var(--color-danger);
 }
 
@@ -618,7 +637,9 @@ body {
   color: var(--color-text);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
-  font-size: 14px;
+  font-size: var(--text-preset-5-font-size);
+  line-height: var(--text-preset-5-line-height);
+  letter-spacing: var(--text-preset-5-letter-spacing);
   box-shadow: var(--shadow-large);
   z-index: 200;
 }
@@ -638,7 +659,7 @@ body {
 
 .toast-action-link {
   color: var(--color-primary);
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   text-decoration: underline;
   white-space: nowrap;
 }
@@ -665,8 +686,10 @@ body {
   display: flex;
   align-items: center;
   gap: var(--spacing-100);
-  font-size: var(--text-preset-4-font-size);
-  letter-spacing: var(--text-preset-4-letter-spacing);
+  font-size: var(--text-preset-5-font-size);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--text-preset-5-line-height);
+  letter-spacing: var(--text-preset-5-letter-spacing);
 }
 
 .meta-row[hidden] {
@@ -698,8 +721,10 @@ body {
   border: none;
   background: transparent;
   font-family: inherit;
-  font-size: 14px;
-  letter-spacing: -0.2px;
+  font-size: var(--text-preset-5-font-size);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--text-preset-5-line-height);
+  letter-spacing: var(--text-preset-5-letter-spacing);
   padding: 0;
 }
 
@@ -716,9 +741,10 @@ body {
   background: transparent;
   resize: none;
   font-family: inherit;
-  font-size: 14px;
-  letter-spacing: -0.2px;
-  line-height: 1.3;
+  font-size: var(--text-preset-5-font-size);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--text-preset-5-line-height);
+  letter-spacing: var(--text-preset-5-letter-spacing);
   color: var(--color-body-text);
   white-space: pre-wrap;
 }
@@ -739,16 +765,16 @@ body {
 
 .note-actions-panel {
   flex-direction: column;
-  align-items: flex-start;
+  align-items: stretch;
   gap: var(--spacing-150);
   width: 258px;
-  padding: var(--spacing-250) 0 var(--spacing-250) var(--spacing-200);
+  padding: 20px 20px 20px 16px;
   background: var(--color-bg);
+  align-self: start;
 }
 
 .note-actions-panel .btn {
   width: 100%;
-  max-width: 242px;
   min-height: 44px;
   justify-content: flex-start;
 }
@@ -774,6 +800,7 @@ body {
   border-radius: var(--radius-md);
   font-weight: var(--font-weight-medium);
   font-size: var(--text-preset-4-font-size);
+  line-height: var(--text-preset-4-line-height);
   letter-spacing: var(--text-preset-4-letter-spacing);
   border: 1px solid transparent;
 }
@@ -1007,7 +1034,10 @@ body {
   }
 
   .panel-title {
-    font-size: 22px;
+    font-size: var(--text-preset-1-font-size);
+    font-weight: var(--text-preset-1-font-weight);
+    line-height: var(--text-preset-1-line-height);
+    letter-spacing: var(--text-preset-1-letter-spacing);
   }
 
   .notes-list-panel,
@@ -1017,6 +1047,16 @@ body {
 
   .note-title-input {
     font-size: var(--text-preset-2-font-size);
+    font-weight: var(--text-preset-2-font-weight);
+    line-height: var(--text-preset-2-line-height);
+    letter-spacing: var(--text-preset-2-letter-spacing);
+  }
+
+  /* Allow title to wrap on mobile */
+  .note-title-input {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
   }
 
   .bottom-nav {
@@ -1048,6 +1088,307 @@ body {
     width: 56px;
     height: 56px;
   }
+
+  /* --- Panel subtitle (Archived Notes description, tag filter description) --- */
+  .panel-subtitle {
+    margin: -8px 0 16px;
+    font-size: var(--text-preset-5-font-size);
+    font-weight: var(--font-weight-regular);
+    line-height: 1.5;
+    letter-spacing: var(--text-preset-5-letter-spacing);
+    color: var(--color-text-secondary);
+  }
+
+  .panel-subtitle[hidden] {
+    display: none;
+  }
+
+  /* --- Mobile Search Panel --- */
+  .mobile-search-panel {
+    display: none;
+    padding: var(--spacing-200);
+    padding-bottom: 80px;
+  }
+
+  [data-mobile-view="search"] .mobile-search-panel {
+    display: block;
+  }
+
+  [data-mobile-view="search"] .notes-list-panel,
+  [data-mobile-view="search"] .note-detail-panel {
+    display: none;
+  }
+
+  [data-mobile-view="search"] .fab {
+    display: flex;
+  }
+
+  .mobile-search-field {
+    position: relative;
+    margin-bottom: 12px;
+  }
+
+  .mobile-search-icon {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--color-text-muted);
+    pointer-events: none;
+  }
+
+  .mobile-search-input {
+    width: 100%;
+    height: 44px;
+    padding: 12px 16px 12px 44px;
+    border: 1px solid var(--color-search-border);
+    border-radius: var(--radius-full);
+    background: var(--color-surface-secondary);
+    color: var(--color-text);
+    font-family: inherit;
+    font-size: var(--text-preset-5-font-size);
+    font-weight: var(--font-weight-regular);
+    line-height: var(--text-preset-5-line-height);
+    letter-spacing: var(--text-preset-5-letter-spacing);
+    box-shadow: none;
+    -webkit-appearance: none;
+  }
+
+  .mobile-search-input:focus {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+
+  .mobile-search-subtitle {
+    font-size: var(--text-preset-5-font-size);
+    font-weight: var(--font-weight-regular);
+    line-height: 1.5;
+    letter-spacing: var(--text-preset-5-letter-spacing);
+    color: var(--color-text-secondary);
+    margin: 0 0 16px;
+  }
+
+  .mobile-search-subtitle:empty {
+    display: none;
+  }
+
+  /* --- Mobile Tags Panel --- */
+  .mobile-tags-panel {
+    display: none;
+    padding: var(--spacing-200);
+    padding-bottom: 80px;
+  }
+
+  [data-mobile-view="tags"] .mobile-tags-panel {
+    display: block;
+  }
+
+  [data-mobile-view="tags"] .notes-list-panel,
+  [data-mobile-view="tags"] .note-detail-panel {
+    display: none;
+  }
+
+  [data-mobile-view="tags"] .fab {
+    display: flex;
+  }
+
+  .mobile-tags-list {
+    margin-top: 8px;
+  }
+
+  .mobile-tags-list li {
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .mobile-tag-list-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: 16px 0;
+    font-size: var(--text-preset-4-font-size);
+    font-weight: var(--font-weight-medium);
+    line-height: var(--text-preset-4-line-height);
+    letter-spacing: var(--text-preset-4-letter-spacing);
+    color: var(--color-text-secondary);
+    text-align: left;
+    background: none;
+    border: none;
+    cursor: pointer;
+  }
+
+  .mobile-tag-list-item:hover {
+    color: var(--color-text);
+  }
+
+  /* --- Mobile Tag Detail Panel --- */
+  .mobile-tag-detail-panel {
+    display: none;
+    padding: var(--spacing-200);
+    padding-bottom: 80px;
+  }
+
+  [data-mobile-view="tag-detail"] .mobile-tag-detail-panel {
+    display: block;
+  }
+
+  [data-mobile-view="tag-detail"] .notes-list-panel,
+  [data-mobile-view="tag-detail"] .note-detail-panel {
+    display: none;
+  }
+
+  [data-mobile-view="tag-detail"] .fab {
+    display: flex;
+  }
+
+  .mobile-tag-back-btn {
+    margin-bottom: 12px;
+  }
+
+  .mobile-tag-detail-title {
+    font-size: var(--text-preset-1-font-size);
+    font-weight: var(--text-preset-1-font-weight);
+    line-height: var(--text-preset-1-line-height);
+    letter-spacing: var(--text-preset-1-letter-spacing);
+    margin: 0 0 8px;
+  }
+
+  .mobile-tag-detail-subtitle {
+    font-size: var(--text-preset-5-font-size);
+    font-weight: var(--font-weight-regular);
+    line-height: 1.5;
+    letter-spacing: var(--text-preset-5-letter-spacing);
+    color: var(--color-text-secondary);
+    margin: 0 0 16px;
+  }
+
+  /* --- Mobile Settings Sub-Panel --- */
+  .mobile-settings-sub-panel {
+    display: none;
+    padding: var(--spacing-200);
+    padding-bottom: 80px;
+    background: var(--color-bg);
+  }
+
+  [data-app-view="settings"][data-mobile-settings-view="sub"] .mobile-settings-sub-panel {
+    display: block;
+  }
+
+  [data-app-view="settings"][data-mobile-settings-view="sub"] .settings-panel {
+    display: none;
+  }
+
+  .mobile-settings-back-btn {
+    margin-bottom: 8px;
+    font-size: var(--text-preset-5-font-size);
+    font-weight: var(--font-weight-regular);
+    line-height: var(--text-preset-5-line-height);
+    letter-spacing: var(--text-preset-5-letter-spacing);
+    color: var(--color-text-secondary);
+  }
+
+  .mobile-settings-sub-content .panel-title {
+    position: static;
+    margin-bottom: 4px;
+  }
+
+  .mobile-settings-sub-content .settings-hint {
+    margin-bottom: 0;
+  }
+
+  .mobile-settings-sub-content .theme-options {
+    margin-top: 20px;
+  }
+
+  .mobile-settings-sub-content .apply-theme-btn,
+  .mobile-settings-sub-content .apply-font-btn,
+  .mobile-settings-sub-content .change-password-btn {
+    display: flex;
+    margin-left: auto;
+    min-width: 160px;
+  }
+
+  .mobile-settings-sub-content .change-password-form {
+    display: flex;
+    flex-direction: column;
+    margin-top: 20px;
+  }
+
+  .mobile-settings-sub-content .auth-input {
+    margin-bottom: 8px;
+  }
+
+  .mobile-settings-sub-content .field-hint {
+    font-size: var(--text-preset-6-font-size);
+    line-height: var(--text-preset-6-line-height);
+    letter-spacing: var(--text-preset-6-letter-spacing);
+    color: var(--color-text-muted);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin: 0 0 12px;
+  }
+
+  .mobile-settings-sub-content .field-hint::before {
+    content: "";
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23717784'%3E%3Cpath fill-rule='evenodd' clip-rule='evenodd' d='M12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2ZM11 10V7H13V10H11ZM11 17V11H13V17H11Z'/%3E%3C/svg%3E") center/contain no-repeat;
+    flex-shrink: 0;
+  }
+
+  /* On mobile, settings nav items look like menu rows (full width, with chevrons) */
+  [data-app-view="settings"] .settings-panel {
+    display: block;
+  }
+
+  .settings-nav {
+    width: 100%;
+    padding: 0;
+    background: var(--color-bg);
+  }
+
+  .settings-nav .settings-nav-item {
+    width: 100%;
+    height: 52px;
+    padding: 0 4px;
+    border-radius: 0;
+    border-bottom: none;
+    font-size: var(--text-preset-4-font-size);
+    font-weight: var(--font-weight-regular);
+    line-height: var(--text-preset-4-line-height);
+    letter-spacing: var(--text-preset-4-letter-spacing);
+  }
+
+  .settings-nav .settings-nav-item:not(.logout-btn) {
+    border-bottom: none;
+  }
+
+  .settings-nav .settings-nav-chevron {
+    display: block;
+    color: var(--color-text-secondary);
+    width: 16px;
+    height: 16px;
+  }
+
+  .settings-nav .settings-nav-divider {
+    margin: 8px 0;
+  }
+
+  /* Hide the desktop settings content section on mobile (shown in sub-panel) */
+  .settings-content {
+    display: none;
+  }
+
+  /* Settings title when on settings page */
+  [data-app-view="settings"] .settings-panel .panel-title {
+    padding: 4px 0 16px;
+    font-size: var(--text-preset-1-font-size);
+    font-weight: var(--text-preset-1-font-weight);
+    line-height: var(--text-preset-1-line-height);
+    letter-spacing: var(--text-preset-1-letter-spacing);
+  }
 }
 
 /* ==========================================================================
@@ -1055,11 +1396,11 @@ body {
    ========================================================================== */
 
 @media (min-width: 900px) {
-  /* Figma's desktop composition uses a distinct 81px page header beside the
-     272px navigation rail. These overrides intentionally live only in the
-     desktop query, leaving the tablet and mobile layouts untouched. */
+  /* Typography: Inter is used across the entire app on all breakpoints.
+     The desktop query previously set Noto Serif — that was incorrect per
+     the style guide which specifies Inter for all 6 text presets. */
   body {
-    font-family: "Noto Serif", Georgia, serif;
+    font-family: var(--font-body);
   }
 
   .app-header {
@@ -1092,10 +1433,9 @@ body {
   .app-body {
     position: relative;
     display: grid;
-    grid-template-columns: 324px 290px minmax(0, 1fr) 310px;
+    grid-template-columns: 272px 290px minmax(0, 1fr) 258px;
     align-items: start;
     min-height: calc(100vh - 81px);
-    max-width: 1440px;
     padding-bottom: 0;
     background: var(--color-bg);
   }
@@ -1118,7 +1458,7 @@ body {
   }
 
   .notes-list-panel {
-    padding: 20px 16px 20px 32px;
+    padding: 20px 16px 20px 20px;
     border-right: 1px solid var(--color-border);
     background: var(--color-bg);
     height: calc(100vh - 81px);
@@ -1140,7 +1480,7 @@ body {
   .notes-list-panel .panel-title {
     position: absolute;
     top: -56px;
-    left: 304px;
+    left: 292px;
     margin: 0;
   }
 
@@ -1168,6 +1508,14 @@ body {
   .bottom-nav,
   .fab {
     display: none;
+  }
+
+  /* Hide all mobile-only panels on desktop */
+  .mobile-search-panel,
+  .mobile-tags-panel,
+  .mobile-tag-detail-panel,
+  .mobile-settings-sub-panel {
+    display: none !important;
   }
 
   /* Settings replaces the list/detail/actions columns, not the sidebar.
@@ -1200,6 +1548,7 @@ body {
     flex: 1;
     min-width: 0;
     padding: 32px 32px 20px;
+    display: block; /* ensure visible on desktop even though mobile hides it */
   }
 }
 
@@ -1337,20 +1686,20 @@ body {
 }
 
 .settings-section legend {
-  font-size: 16px;
-  font-weight: 600;
-  line-height: 1.2;
-  letter-spacing: -0.3px;
+  font-size: var(--text-preset-3-font-size);
+  font-weight: var(--text-preset-3-font-weight);
+  line-height: var(--text-preset-3-line-height);
+  letter-spacing: var(--text-preset-3-letter-spacing);
   color: var(--color-text);
   padding: 0;
   margin-bottom: 0;
 }
 
 .settings-hint {
-  font-size: 14px;
-  font-weight: 400;
-  line-height: 1.3;
-  letter-spacing: -0.2px;
+  font-size: var(--text-preset-5-font-size);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--text-preset-5-line-height);
+  letter-spacing: var(--text-preset-5-letter-spacing);
   color: var(--color-text-secondary);
   margin: 4px 0 0;
 }
@@ -1384,7 +1733,7 @@ body {
   align-self: flex-end;
   min-height: 41px;
   padding: 12px 16px;
-  line-height: 1.2;
+  line-height: var(--text-preset-4-line-height);
 }
 
 /* Keeps the radio input first in the HTML (so keyboard/tab order and
@@ -1519,11 +1868,19 @@ body {
 
 .modal-title {
   margin: 0 0 4px;
-  font-size: 18px;
+  font-size: var(--text-preset-3-font-size);
+  font-weight: var(--text-preset-3-font-weight);
+  line-height: var(--text-preset-3-line-height);
+  letter-spacing: var(--text-preset-3-letter-spacing);
+  color: var(--color-text);
 }
 
 .modal-message {
   margin: 0;
+  font-size: var(--text-preset-5-font-size);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--text-preset-5-line-height);
+  letter-spacing: var(--text-preset-5-letter-spacing);
   color: var(--color-text-secondary);
 }
 
@@ -1628,12 +1985,19 @@ body {
 .auth-title {
   margin: 0 0 var(--spacing-100);
   font-size: var(--text-preset-1-font-size);
+  font-weight: var(--text-preset-1-font-weight);
+  line-height: var(--text-preset-1-line-height);
+  letter-spacing: var(--text-preset-1-letter-spacing);
   text-align: center;
   color: var(--color-text);
 }
 
 .auth-subtitle {
   margin: 0 0 var(--spacing-300);
+  font-size: var(--text-preset-5-font-size);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--text-preset-5-line-height);
+  letter-spacing: var(--text-preset-5-letter-spacing);
   text-align: center;
   color: var(--color-text-secondary);
 }
@@ -1645,8 +2009,11 @@ body {
 
 .auth-label {
   margin-bottom: var(--spacing-075);
-  font-weight: var(--font-weight-medium);
   font-size: var(--text-preset-4-font-size);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--text-preset-4-line-height);
+  letter-spacing: var(--text-preset-4-letter-spacing);
+  color: var(--color-text);
 }
 
 .auth-label-row {
@@ -1664,7 +2031,10 @@ body {
   background: var(--color-surface);
   color: var(--color-text);
   font-family: inherit;
-  font-size: var(--text-preset-4-font-size);
+  font-size: var(--text-preset-5-font-size);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--text-preset-5-line-height);
+  letter-spacing: var(--text-preset-5-letter-spacing);
 }
 
 .auth-input.has-error {
@@ -1693,13 +2063,19 @@ body {
 
 .field-hint {
   margin: -10px 0 16px;
-  font-size: 13px;
+  font-size: var(--text-preset-6-font-size);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--text-preset-6-line-height);
+  letter-spacing: var(--text-preset-6-letter-spacing);
   color: var(--color-text-secondary);
 }
 
 .form-error {
   margin: -10px 0 16px;
-  font-size: 13px;
+  font-size: var(--text-preset-6-font-size);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--text-preset-6-line-height);
+  letter-spacing: var(--text-preset-6-letter-spacing);
   color: var(--color-danger);
 }
 
@@ -1717,8 +2093,11 @@ body {
   align-items: center;
   gap: 12px;
   margin: var(--spacing-300) 0;
+  font-size: var(--text-preset-6-font-size);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--text-preset-6-line-height);
+  letter-spacing: var(--text-preset-6-letter-spacing);
   color: var(--color-text-secondary);
-  font-size: 13px;
 }
 
 .auth-divider::before,
@@ -1736,19 +2115,25 @@ body {
 .auth-footer-text {
   margin: var(--spacing-250) 0 0;
   text-align: center;
+  font-size: var(--text-preset-5-font-size);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--text-preset-5-line-height);
+  letter-spacing: var(--text-preset-5-letter-spacing);
   color: var(--color-text-secondary);
-  font-size: var(--text-preset-4-font-size);
 }
 
 .link-btn {
+  font-size: inherit;
   color: var(--color-primary);
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   text-decoration: underline;
 }
 
 .forgot-password-link {
-  font-size: 14px;
-  font-weight: 400;
+  font-size: var(--text-preset-5-font-size);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--text-preset-5-line-height);
+  letter-spacing: var(--text-preset-5-letter-spacing);
   text-decoration: underline;
   color: var(--color-text-secondary);
 }
