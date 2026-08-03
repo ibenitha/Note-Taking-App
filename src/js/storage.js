@@ -12,17 +12,23 @@ const DRAFT_KEY = "noteDraft";
 const ACCOUNT_KEY = "account";
 const SESSION_KEY = "session";
 
+// Every localStorage write in this file goes through here, so quota
+// errors (setItem throws once storage is full) are only handled once
+// instead of once per save function.
+function safeSetLocalStorageItem(key, value) {
+  try {
+    localStorage.setItem(key, value);
+  } catch (error) {
+    console.error(`Could not save "${key}" to local storage:`, error);
+    alert("Your changes could not be saved. Local storage may be full.");
+  }
+}
+
 // Saves the full notes array as a JSON string. localStorage can only
 // store strings, so objects and arrays must be converted with
 // JSON.stringify before saving, and parsed back with JSON.parse when read.
 export function saveNotes(notes) {
-  try {
-    localStorage.setItem(NOTES_KEY, JSON.stringify(notes));
-  } catch (error) {
-    // setItem throws if storage is full (its quota has been exceeded).
-    console.error("Could not save notes:", error);
-    alert("Your changes could not be saved. Local storage may be full.");
-  }
+  safeSetLocalStorageItem(NOTES_KEY, JSON.stringify(notes));
 }
 
 // Returns the saved notes array, or null if nothing has been saved yet
@@ -36,7 +42,7 @@ export function loadNotes() {
 }
 
 export function savePreferences(preferences) {
-  localStorage.setItem(PREFERENCES_KEY, JSON.stringify(preferences));
+  safeSetLocalStorageItem(PREFERENCES_KEY, JSON.stringify(preferences));
 }
 
 export function loadPreferences() {
@@ -68,7 +74,7 @@ export function clearDraft() {
 // The account is the one simulated user this demo supports (there is no
 // backend, so there is nowhere to store more than one real account).
 export function saveAccount(account) {
-  localStorage.setItem(ACCOUNT_KEY, JSON.stringify(account));
+  safeSetLocalStorageItem(ACCOUNT_KEY, JSON.stringify(account));
 }
 
 export function loadAccount() {
@@ -83,7 +89,7 @@ export function loadAccount() {
 // localStorage (not sessionStorage) so logging in stays in effect across
 // a page reload, the same way a real "remember me" session would.
 export function saveSession(session) {
-  localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+  safeSetLocalStorageItem(SESSION_KEY, JSON.stringify(session));
 }
 
 export function loadSession() {

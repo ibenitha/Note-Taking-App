@@ -17,10 +17,27 @@ export class Note {
     this.id = generateId();
     this.title = title;
     this.content = content;
-    this.tags = tags;
+    this.tags = [];
+    tags.forEach((tag) => this.addTag(tag));
     this.archived = false;
     this.timestamp = new Date().toISOString();
     this.location = null;
+  }
+
+  // Adds a tag if it isn't already on this note, so the same tag can't
+  // be added twice.
+  addTag(tag) {
+    if (!this.tags.includes(tag)) {
+      this.tags.push(tag);
+    }
+  }
+
+  archive() {
+    this.archived = true;
+  }
+
+  restore() {
+    this.archived = false;
   }
 }
 
@@ -44,9 +61,27 @@ export function deleteNote(notes, id) {
 // Sets a note's archived flag to true (archive) or false (restore).
 export function updateArchivedStatus(notes, id, isArchived) {
   const note = notes.find((note) => note.id === id);
-  if (note) {
-    note.archived = isArchived;
+  if (!note) return;
+  if (isArchived) {
+    note.archive();
+  } else {
+    note.restore();
   }
+}
+
+// Applies edits from the note detail form (title/content/tags) to an
+// existing note and refreshes its timestamp. Tags go through addTag()
+// one at a time (instead of a plain array replacement) so duplicates
+// typed into the tags field can't sneak in twice.
+export function updateNote(notes, id, updates) {
+  const note = notes.find((note) => note.id === id);
+  if (!note) return;
+
+  note.title = updates.title;
+  note.content = updates.content;
+  note.tags = [];
+  updates.tags.forEach((tag) => note.addTag(tag));
+  note.timestamp = new Date().toISOString();
 }
 
 // Returns notes whose title, content, or any tag contains the query text

@@ -24,8 +24,10 @@ function formatLocation(location) {
 
 // Builds one <li><button class="note-card">...</button></li> element for
 // the notes list, using document.createElement instead of innerHTML so
-// note titles/content can never be interpreted as HTML.
-function createNoteCard(note, selectedNoteId) {
+// note titles/content can never be interpreted as HTML. Exported so the
+// mobile search/tag-detail lists in main.js can build identical cards
+// instead of maintaining their own copy of this markup.
+export function createNoteCard(note, selectedNoteId) {
   const listItem = document.createElement("li");
 
   const card = document.createElement("button");
@@ -73,7 +75,9 @@ const TAG_ICON_PATHS = [
   "M9.90712 8.31531C9.90322 9.18514 9.17642 9.90027 8.29784 9.89832C7.42509 9.89638 6.69828 9.1686 6.70315 8.30169C6.70899 7.39683 7.42509 6.69144 8.33578 6.69533C9.19977 6.69825 9.91101 7.43089 9.90712 8.31531Z",
 ];
 
-function createTagIcon() {
+// Exported so main.js's mobile tags list can reuse the exact same icon
+// instead of rebuilding it from the same path data a second time.
+export function createTagIcon() {
   const svgNamespace = "http://www.w3.org/2000/svg";
   const svg = document.createElementNS(svgNamespace, "svg");
   svg.setAttribute("width", "20");
@@ -268,6 +272,7 @@ export function clearValidationError() {
 
 // --- Toast feedback --------------------------------------------------------
 
+const TOAST_DURATION_MS = 4000;
 let toastTimeoutId = null;
 
 // Shows a brief success message, then hides it again after a few seconds.
@@ -301,7 +306,7 @@ export function showToast(message, action) {
 
   toast.hidden = false;
   clearTimeout(toastTimeoutId);
-  toastTimeoutId = setTimeout(hideToast, 4000);
+  toastTimeoutId = setTimeout(hideToast, TOAST_DURATION_MS);
 }
 
 export function hideToast() {

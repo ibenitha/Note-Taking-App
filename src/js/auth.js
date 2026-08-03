@@ -11,7 +11,7 @@
 // is fine for demonstrating the UI flow the assignment/Figma asks for, but
 // it is NOT real authentication and must never be treated as secure.
 
-const MINIMUM_PASSWORD_LENGTH = 8;
+export const MINIMUM_PASSWORD_LENGTH = 8;
 
 export function isPasswordValid(password) {
   return password.length >= MINIMUM_PASSWORD_LENGTH;
@@ -23,7 +23,7 @@ export function createAccount(email, password) {
   return { email, password };
 }
 
-export function isValidLogin(account, email, password) {
+export function isLoginValid(account, email, password) {
   if (!account) return false;
   return account.email === email && account.password === password;
 }

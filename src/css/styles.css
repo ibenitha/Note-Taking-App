@@ -70,7 +70,6 @@ textarea:focus-visible {
   --color-surface: #ffffff;
   --color-surface-secondary: #f3f5f8; /* active/selected item backgrounds, secondary buttons */
   --color-header-bg: #f3f5f8;
-  --color-header-surface: #f3f5f8;
   --color-text: #0e121b; /* titles, primary values, active nav text */
   --color-text-secondary: #2b303b; /* icons, inactive nav text, labels, dates */
   --color-text-muted: #717784; /* "Tags" sidebar section heading */
@@ -84,11 +83,9 @@ textarea:focus-visible {
   --color-danger: #e5484d;
 
   /* Settings menu column (Figma: Desktop - Settings) */
-  --color-settings-nav-border: #e0e4ea;
   --color-settings-nav-active-bg: #f3f5f8;
   --color-settings-nav-active-text: #0e121b;
   --color-settings-nav-inactive-text: #2b303b;
-  --color-settings-nav-divider: #e0e4ea;
   --color-menu-divider: #f3f5f8;
   --color-menu-item-active-bg: #ebf1ff;
   --shadow-bottom-nav: 0 -4px 6px rgba(240, 240, 240, 0.6);
@@ -214,12 +211,6 @@ body {
   width: 100%;
   max-width: 300px;
   margin-left: auto;
-}
-
-/* On mobile, tapping the bottom nav's Search icon reveals this same
-   input instead of building a separate mobile search screen. */
-[data-mobile-search="open"] .header-search {
-  display: block;
 }
 
 .header-search-icon {
@@ -570,9 +561,9 @@ body {
   gap: 4px;
 }
 
+/* Inherits .icon-btn's 36x36 size (no override) so this stays a
+   comfortable touch target instead of shrinking on small screens. */
 .toolbar-actions .icon-btn {
-  width: 28px;
-  height: 28px;
   color: var(--color-text-toolbar);
 }
 
@@ -994,12 +985,19 @@ body {
     min-height: calc(100vh - 72px);
   }
 
+  /* Tablet is too narrow for a 3rd column, so it steps between the list
+     and detail panel one at a time, the same way mobile does — this rule
+     hides whichever one isn't the current mobile-view. */
   [data-mobile-view="detail"] .notes-list-panel,
   [data-mobile-view="list"] .note-detail-panel {
-    display: block;
+    display: none;
   }
 
-  .note-detail-mobile-toolbar,
+  /* Tablet has no room for the desktop's separate note-actions-panel
+     column, so it keeps using the mobile toolbar (Go Back, delete,
+     archive, Cancel, Save Note) for those actions instead of showing
+     nothing at all. Only the bottom nav and FAB are replaced, by the
+     sidebar and the "+ Create New Note" button. */
   .bottom-nav,
   .fab {
     display: none;
@@ -1072,7 +1070,7 @@ body {
 
   .bottom-nav-item {
     width: 68.6px;
-    height: 32px;
+    height: 44px;
     padding: 4px 0;
     gap: 4px;
     font-size: 0;
@@ -1084,7 +1082,7 @@ body {
 
   .fab {
     right: var(--spacing-200);
-    bottom: 76px;
+    bottom: 88px;
     width: 56px;
     height: 56px;
   }
@@ -1541,7 +1539,7 @@ body {
     flex: 0 0 258px;
     width: 258px;
     padding: 20px 16px 20px 32px;
-    border-right: 1px solid var(--color-settings-nav-border);
+    border-right: 1px solid var(--color-border);
   }
 
   .settings-content {
@@ -1611,7 +1609,7 @@ body {
   height: 1px;
   margin: 0;
   border: none;
-  background: var(--color-settings-nav-divider);
+  background: var(--color-border);
 }
 
 .settings-nav-item {
@@ -1908,7 +1906,6 @@ body {
   --color-surface: #0e121b;
   --color-surface-secondary: #232530;
   --color-header-bg: #232530;
-  --color-header-surface: #232530;
   --color-text: #ffffff;
   --color-text-secondary: #cacfd8;
   --color-text-muted: #99a0ae;
@@ -1917,11 +1914,9 @@ body {
   --color-border: #232530;
   --color-search-border: #525866;
   --color-tag-bg: #2b303b;
-  --color-settings-nav-border: #232530;
   --color-settings-nav-active-bg: #232530;
   --color-settings-nav-active-text: #ffffff;
   --color-settings-nav-inactive-text: #e0e4ea;
-  --color-settings-nav-divider: #232530;
   --color-menu-divider: #232530;
   --color-menu-item-active-bg: #ebf1ff;
   --shadow-bottom-nav: 0 -5px 6px rgba(0, 0, 0, 0.5);

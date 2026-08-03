@@ -23,6 +23,9 @@ const ARCHIVE_ICON_PATHS =
   '<path stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M11.998 17V10" />' +
   '<path stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M20.9336 7H3.05859" />';
 
+// Matches the "@media (min-width: 900px)" desktop breakpoint in styles.css.
+const DESKTOP_BREAKPOINT_PX = 900;
+
 // --- Element references ---------------------------------------------------
 // Looked up once, at the top, so every function below can just use them.
 
@@ -64,15 +67,14 @@ const searchForm = document.querySelector(".header-search");
 const searchInput = document.querySelector("#search-input");
 const mobileSearchButton = document.querySelector(".mobile-search-btn");
 
-// Mobile-only panels and their controls
-const mobileSearchPanel = document.querySelector(".mobile-search-panel");
+// Mobile-only panels and their controls. The panels themselves are shown
+// and hidden purely by CSS (via data-mobile-view on <body>), so only the
+// controls inside them need a JS reference.
 const mobileSearchInput = document.querySelector("#mobile-search-input");
 const mobileSearchSubtitle = document.querySelector(".mobile-search-subtitle");
 const mobileSearchResultsList = document.querySelector(".mobile-search-results");
 const mobileTagsButton = document.querySelector(".mobile-tags-btn");
-const mobileTagsPanel = document.querySelector(".mobile-tags-panel");
 const mobileTagsList = document.querySelector(".mobile-tags-list");
-const mobileTagDetailPanel = document.querySelector(".mobile-tag-detail-panel");
 const mobileTagBackButton = document.querySelector(".mobile-tag-back-btn");
 const mobileTagDetailTitle = document.querySelector(".mobile-tag-detail-title strong");
 const mobileTagDetailSubtitle = document.querySelector(".mobile-tag-detail-subtitle");
@@ -247,7 +249,6 @@ function renderApp() {
 function showNotesView() {
   document.body.dataset.appView = "notes";
   document.body.dataset.mobileView = "list";
-  document.body.dataset.mobileSearch = "closed";
   delete document.body.dataset.mobileSettingsView;
   // Update panel subtitle for archived / tag views
   renderPanelSubtitle();
@@ -314,32 +315,9 @@ function showMobileSettingsSubPanel(sectionKey) {
     clonedPasswordForm.querySelectorAll(".password-toggle-btn").forEach((btn) => {
       btn.addEventListener("click", () => ui.togglePasswordVisibility(btn));
     });
-    clonedPasswordForm.addEventListener("submit", (e) => {
-      e.preventDefault();
-      ui.clearAllFieldErrors(clonedPasswordForm);
-      ui.showFormError(clonedPasswordForm, "");
-      const oldPassword = clonedPasswordForm.querySelector('[data-field="old-password"]').value;
-      const newPassword = clonedPasswordForm.querySelector('[data-field="new-password"]').value;
-      const confirmPassword = clonedPasswordForm.querySelector('[data-field="confirm-new-password"]').value;
-      const account = storage.loadAccount();
-      let isValid = true;
-      if (!account || account.password !== oldPassword) {
-        ui.showFieldError(clonedPasswordForm, "old-password", "Old password is incorrect.");
-        isValid = false;
-      }
-      if (!auth.isPasswordValid(newPassword)) {
-        ui.showFieldError(clonedPasswordForm, "new-password", "Password must be at least 8 characters.");
-        isValid = false;
-      }
-      if (confirmPassword !== newPassword) {
-        ui.showFieldError(clonedPasswordForm, "confirm-new-password", "Passwords do not match.");
-        isValid = false;
-      }
-      if (!isValid) return;
-      account.password = newPassword;
-      storage.saveAccount(account);
-      clonedPasswordForm.reset();
-      ui.showToast("Password changed successfully!");
+    clonedPasswordForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+      submitChangePasswordForm(clonedPasswordForm);
     });
   }
 
@@ -378,48 +356,16 @@ function handleMobileSearchInput() {
   if (results.length === 0) return;
 
   results.forEach((note) => {
-    const card = createMobileNoteCard(note);
-    mobileSearchResultsList.appendChild(card);
+    mobileSearchResultsList.appendChild(ui.createNoteCard(note, selectedNoteId));
   });
 }
 
-// Builds a lightweight note card for the mobile search / tag-detail lists
-// (uses the same DOM structure as createNoteCard in ui.js so styles apply).
-function createMobileNoteCard(note) {
-  const li = document.createElement("li");
-  const btn = document.createElement("button");
-  btn.type = "button";
-  btn.className = "note-card";
-  btn.dataset.noteId = note.id;
-
-  const title = document.createElement("h3");
-  title.className = "note-card-title";
-  title.textContent = note.title;
-
-  const pills = document.createElement("div");
-  pills.className = "tag-pills";
-  note.tags.forEach((tag) => {
-    const pill = document.createElement("span");
-    pill.className = "tag-pill";
-    pill.textContent = tag;
-    pills.appendChild(pill);
-  });
-
-  const date = document.createElement("time");
-  date.className = "note-card-date";
-  const d = new Date(note.timestamp);
-  date.textContent = `${String(d.getDate()).padStart(2, "0")} ${d.toLocaleString("en-US", { month: "short" })} ${d.getFullYear()}`;
-
-  btn.append(title, pills, date);
-  li.appendChild(btn);
-
-  btn.addEventListener("click", () => {
-    selectedNoteId = note.id;
-    renderApp();
-    document.body.dataset.mobileView = "detail";
-  });
-
-  return li;
+// Selecting a note from either mobile list works the same way as the
+// desktop notes list: load it into the detail form and switch views.
+function openNoteFromMobileList(noteId) {
+  selectedNoteId = noteId;
+  renderApp();
+  document.body.dataset.mobileView = "detail";
 }
 
 // Renders the mobile Tags list page.
@@ -441,25 +387,10 @@ function renderMobileTagsList() {
     btn.className = "mobile-tag-list-item";
     btn.dataset.tag = tag;
 
-    const svgNS = "http://www.w3.org/2000/svg";
-    const svg = document.createElementNS(svgNS, "svg");
-    svg.setAttribute("width", "20"); svg.setAttribute("height", "20");
-    svg.setAttribute("viewBox", "0 0 24 24"); svg.setAttribute("fill", "none");
-    svg.setAttribute("stroke", "currentColor"); svg.setAttribute("stroke-width", "1.8");
-    svg.setAttribute("stroke-linecap", "round"); svg.setAttribute("stroke-linejoin", "round");
-    svg.setAttribute("aria-hidden", "true");
-    const p1 = document.createElementNS(svgNS, "path");
-    p1.setAttribute("fill-rule", "evenodd"); p1.setAttribute("clip-rule", "evenodd");
-    p1.setAttribute("d", "M3.01582 5.96647C3.01874 4.5547 4.08608 3.28888 5.47158 3.0505C5.75568 3.00088 9.08808 3.00769 10.4668 3.00866C11.8309 3.00964 12.9936 3.50001 13.9568 4.4613C16.002 6.50257 18.0452 8.5458 20.0855 10.591C21.2929 11.8004 21.3095 13.6568 20.1069 14.8701C18.3721 16.6214 16.6285 18.364 14.8782 20.0988C13.6659 21.3004 11.8095 21.2848 10.5991 20.0774C8.53544 18.0195 6.47178 15.9617 4.41688 13.8951C3.62197 13.0954 3.15301 12.1292 3.0489 10.9996C2.96522 10.0967 3.01387 6.73998 3.01582 5.96647Z");
-    const p2 = document.createElementNS(svgNS, "path");
-    p2.setAttribute("fill-rule", "evenodd"); p2.setAttribute("clip-rule", "evenodd");
-    p2.setAttribute("d", "M9.90712 8.31531C9.90322 9.18514 9.17642 9.90027 8.29784 9.89832C7.42509 9.89638 6.69828 9.1686 6.70315 8.30169C6.70899 7.39683 7.42509 6.69144 8.33578 6.69533C9.19977 6.69825 9.91101 7.43089 9.90712 8.31531Z");
-    svg.append(p1, p2);
-
     const span = document.createElement("span");
     span.textContent = tag;
 
-    btn.append(svg, span);
+    btn.append(ui.createTagIcon(), span);
     li.appendChild(btn);
     mobileTagsList.appendChild(li);
   });
@@ -474,7 +405,7 @@ function showMobileTagDetail(tag) {
   mobileTagDetailSubtitle.textContent = `All notes with the "${tag}" tag are shown here.`;
   mobileTagDetailList.innerHTML = "";
   tagged.forEach((note) => {
-    mobileTagDetailList.appendChild(createMobileNoteCard(note));
+    mobileTagDetailList.appendChild(ui.createNoteCard(note, selectedNoteId));
   });
   // Update nav active state to tags
   ui.setActiveNav("tags");
@@ -533,7 +464,6 @@ function showArchivedNotes() {
   // Show the archived panel on mobile — same as list view but shows archived notes
   document.body.dataset.appView = "notes";
   document.body.dataset.mobileView = "list";
-  document.body.dataset.mobileSearch = "closed";
   delete document.body.dataset.mobileSettingsView;
   renderPanelSubtitle();
 }
@@ -555,7 +485,7 @@ function handleSearchInput() {
   renderApp();
 }
 
-function openMobileSearch() {
+function showMobileSearch() {
   // Reset mobile search state
   searchQuery = "";
   mobileSearchInput.value = "";
@@ -652,10 +582,11 @@ function saveSelectedNote() {
   const note = getSelectedNote();
   if (!note) return;
 
-  note.title = titleInput.value;
-  note.tags = ui.parseTagsInput(tagsInput.value);
-  note.content = contentInput.value;
-  note.timestamp = new Date().toISOString();
+  noteManager.updateNote(notes, note.id, {
+    title: titleInput.value,
+    content: contentInput.value,
+    tags: ui.parseTagsInput(tagsInput.value),
+  });
 
   unsavedNewNoteId = null;
   storage.saveNotes(notes);
@@ -863,7 +794,7 @@ function handleLoginSubmit(event) {
   if (!isValid) return;
 
   const account = storage.loadAccount();
-  if (!auth.isValidLogin(account, email, password)) {
+  if (!auth.isLoginValid(account, email, password)) {
     ui.showFormError(loginForm, "Invalid email or password.");
     return;
   }
@@ -884,7 +815,7 @@ function handleSignupSubmit(event) {
 
   let isValid = isEmailFieldValid(signupForm);
   if (!auth.isPasswordValid(password)) {
-    ui.showFieldError(signupForm, "password", "Password must be at least 8 characters.");
+    ui.showFieldError(signupForm, "password", `Password must be at least ${auth.MINIMUM_PASSWORD_LENGTH} characters.`);
     isValid = false;
   }
   if (!isValid) return;
@@ -927,7 +858,7 @@ function handleResetPasswordSubmit(event) {
 
   let isValid = true;
   if (!auth.isPasswordValid(password)) {
-    ui.showFieldError(resetPasswordForm, "password", "Password must be at least 8 characters.");
+    ui.showFieldError(resetPasswordForm, "password", `Password must be at least ${auth.MINIMUM_PASSWORD_LENGTH} characters.`);
     isValid = false;
   }
   if (confirmPassword !== password) {
@@ -953,35 +884,42 @@ function handleLogout() {
   showNotesView();
 }
 
-function handleChangePasswordSubmit(event) {
-  event.preventDefault();
-  ui.clearAllFieldErrors(changePasswordForm);
-  ui.showFormError(changePasswordForm, "");
+// Takes the form as a parameter (instead of assuming a specific one) so
+// both the real desktop form and its cloned mobile copy (built by
+// showMobileSettingsSubPanel) can share this exact same validation.
+function submitChangePasswordForm(form) {
+  ui.clearAllFieldErrors(form);
+  ui.showFormError(form, "");
 
-  const oldPassword = changePasswordForm.querySelector('[data-field="old-password"]').value;
-  const newPassword = changePasswordForm.querySelector('[data-field="new-password"]').value;
-  const confirmPassword = changePasswordForm.querySelector('[data-field="confirm-new-password"]').value;
+  const oldPassword = form.querySelector('[data-field="old-password"]').value;
+  const newPassword = form.querySelector('[data-field="new-password"]').value;
+  const confirmPassword = form.querySelector('[data-field="confirm-new-password"]').value;
   const account = storage.loadAccount();
 
   let isValid = true;
   if (!account || account.password !== oldPassword) {
-    ui.showFieldError(changePasswordForm, "old-password", "Old password is incorrect.");
+    ui.showFieldError(form, "old-password", "Old password is incorrect.");
     isValid = false;
   }
   if (!auth.isPasswordValid(newPassword)) {
-    ui.showFieldError(changePasswordForm, "new-password", "Password must be at least 8 characters.");
+    ui.showFieldError(form, "new-password", `Password must be at least ${auth.MINIMUM_PASSWORD_LENGTH} characters.`);
     isValid = false;
   }
   if (confirmPassword !== newPassword) {
-    ui.showFieldError(changePasswordForm, "confirm-new-password", "Passwords do not match.");
+    ui.showFieldError(form, "confirm-new-password", "Passwords do not match.");
     isValid = false;
   }
   if (!isValid) return;
 
   account.password = newPassword;
   storage.saveAccount(account);
-  ui.resetAuthForm(changePasswordForm);
+  ui.resetAuthForm(form);
   ui.showToast("Password changed successfully!");
+}
+
+function handleChangePasswordSubmit(event) {
+  event.preventDefault();
+  submitChangePasswordForm(changePasswordForm);
 }
 
 // --- Initial render ------------------------------------------------------
@@ -1049,7 +987,7 @@ searchInput.addEventListener("input", handleSearchInput);
 
 mobileSearchButton.addEventListener("click", (event) => {
   event.preventDefault();
-  openMobileSearch();
+  showMobileSearch();
 });
 
 // Mobile search input — live results
@@ -1070,6 +1008,21 @@ mobileTagsList.addEventListener("click", (event) => {
   const btn = event.target.closest(".mobile-tag-list-item");
   if (!btn) return;
   showMobileTagDetail(btn.dataset.tag);
+});
+
+// Same event delegation pattern as the desktop notes list: one listener
+// on each <ul> handles clicks on any note card it currently contains,
+// instead of attaching a listener to every card as it's created.
+mobileSearchResultsList.addEventListener("click", (event) => {
+  const clickedCard = event.target.closest(".note-card");
+  if (!clickedCard) return;
+  openNoteFromMobileList(clickedCard.dataset.noteId);
+});
+
+mobileTagDetailList.addEventListener("click", (event) => {
+  const clickedCard = event.target.closest(".note-card");
+  if (!clickedCard) return;
+  openNoteFromMobileList(clickedCard.dataset.noteId);
 });
 
 // Mobile tag detail back button — back to tags list
@@ -1093,7 +1046,7 @@ settingsNav.addEventListener("click", (event) => {
   if (!clickedItem.dataset.settingsSection) return;
 
   const targetSection = clickedItem.dataset.settingsSection;
-  const isMobile = window.innerWidth < 900;
+  const isMobile = window.innerWidth < DESKTOP_BREAKPOINT_PX;
 
   if (isMobile) {
     showMobileSettingsSubPanel(targetSection);
