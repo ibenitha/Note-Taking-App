@@ -605,6 +605,7 @@ body {
   width: 100%;
   min-height: 320px;
   border: none;
+  background: transparent;
   resize: none;
   font-family: inherit;
   font-size: 14px;
