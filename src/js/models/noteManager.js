@@ -16,6 +16,9 @@ export class Note {
     this.archived = false;
     this.timestamp = new Date().toISOString();
     this.location = null;
+    // A note belongs to at most one category, stored as that category's
+    // id (see models/category.js) — null means "no category assigned".
+    this.category = null;
   }
 
   // Adds a tag if it isn't already on this note, so the same tag can't
@@ -48,6 +51,7 @@ export function reviveNote(plainNote) {
   note.timestamp = plainNote.timestamp;
   note.archived = plainNote.archived;
   note.location = plainNote.location;
+  note.category = plainNote.category || null;
   return note;
 }
 
@@ -147,6 +151,11 @@ export function getUniqueTags(notes) {
   return Array.from(tagSet).sort();
 }
 
+// Returns only the notes assigned to the given category id.
+export function filterByCategory(notes, categoryId) {
+  return notes.filter((note) => note.category === categoryId);
+}
+
 // --- Export / import -------------------------------------------------------
 // Import works with plain JSON (the file the user picks), the same kind
 // of plain object storage.js hands back from loadNotes() — so validating
@@ -203,6 +212,7 @@ export function mergeImportedNotes(notes, importedRawNotes) {
     if (typeof rawNote.timestamp === "string") note.timestamp = rawNote.timestamp;
     if (rawNote.archived === true) note.archive();
     if (rawNote.location) note.location = rawNote.location;
+    if (rawNote.category) note.category = rawNote.category;
     addedCount++;
   });
 

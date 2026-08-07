@@ -11,6 +11,7 @@ const PREFERENCES_KEY = "preferences";
 const DRAFT_KEY = "noteDraft";
 const ACCOUNT_KEY = "account";
 const SESSION_KEY = "session";
+const CATEGORIES_KEY = "categories";
 
 // Every localStorage write in this file goes through here, so quota
 // errors (setItem throws once storage is full) are only handled once
@@ -50,6 +51,16 @@ export function saveNotes(notes) {
 // (for example, the very first time the app runs in a browser).
 export function loadNotes() {
   return getStorageItemJSON(localStorage, NOTES_KEY);
+}
+
+// Categories are a plain-object list (no class methods to lose across a
+// JSON.parse round-trip, unlike notes), so they need no revive step.
+export function saveCategories(categories) {
+  safeSetLocalStorageItem(CATEGORIES_KEY, JSON.stringify(categories));
+}
+
+export function loadCategories() {
+  return getStorageItemJSON(localStorage, CATEGORIES_KEY);
 }
 
 export function savePreferences(preferences) {

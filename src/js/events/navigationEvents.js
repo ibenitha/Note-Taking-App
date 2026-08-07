@@ -53,6 +53,7 @@ function showAllNotes() {
   clearSearch();
   state.showingArchived = false;
   state.activeTag = null;
+  state.activeCategory = null;
   core.selectFirstVisibleNote();
   core.renderApp();
   core.showNotesView();
@@ -63,16 +64,21 @@ function showArchivedNotes() {
   clearSearch();
   state.showingArchived = true;
   state.activeTag = null;
+  state.activeCategory = null;
   core.selectFirstVisibleNote();
   core.renderApp();
   core.showNotesView();
 }
 
+// A tag filter and a category filter are mutually exclusive views (see
+// categoryEvents.js's showCategoryFilter, which likewise clears activeTag),
+// so selecting a tag here always clears any active category.
 function showTagFilter(tag) {
   core.discardUnsavedNewNote();
   clearSearch();
   state.showingArchived = false;
   state.activeTag = tag;
+  state.activeCategory = null;
   core.selectFirstVisibleNote();
   core.renderApp();
   core.showNotesView();
@@ -129,7 +135,7 @@ function handleMobileSearchInput() {
   if (results.length === 0) return;
 
   results.forEach((note) => {
-    mobileSearchResultsList.appendChild(renderNotes.createNoteCard(note, state.selectedNoteId));
+    mobileSearchResultsList.appendChild(renderNotes.createNoteCard(note, state.selectedNoteId, state.categories));
   });
 }
 
@@ -150,13 +156,14 @@ function renderMobileTagsList() {
 // Shows the mobile tag detail panel for the given tag.
 function showMobileTagDetail(tag) {
   state.activeTag = tag;
+  state.activeCategory = null;
   state.showingArchived = false;
   const tagged = noteManager.filterByTag(state.notes.filter((n) => !n.archived), tag);
   mobileTagDetailTitle.textContent = tag;
   mobileTagDetailSubtitle.textContent = `All notes with the "${tag}" tag are shown here.`;
   mobileTagDetailList.innerHTML = "";
   tagged.forEach((note) => {
-    mobileTagDetailList.appendChild(renderNotes.createNoteCard(note, state.selectedNoteId));
+    mobileTagDetailList.appendChild(renderNotes.createNoteCard(note, state.selectedNoteId, state.categories));
   });
   renderNotes.setActiveNav("tags");
   document.body.dataset.mobileView = "tag-detail";
