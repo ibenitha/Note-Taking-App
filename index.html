@@ -315,8 +315,21 @@
         <span class="location-btn-label">Add Location</span>
       </button>
 
+      <div class="rich-text-toolbar" role="toolbar" aria-label="Text formatting" aria-controls="note-content-input">
+        <button type="button" class="rt-btn" data-rt-command="bold" aria-label="Bold" aria-pressed="false"><b>B</b></button>
+        <button type="button" class="rt-btn" data-rt-command="italic" aria-label="Italic" aria-pressed="false"><i>I</i></button>
+        <button type="button" class="rt-btn" data-rt-command="underline" aria-label="Underline" aria-pressed="false"><u>U</u></button>
+        <span class="rt-toolbar-divider" aria-hidden="true"></span>
+        <button type="button" class="rt-btn" data-rt-command="insertUnorderedList" aria-label="Bullet list" aria-pressed="false">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="4" cy="6" r="1.2" fill="currentColor" stroke="none" /><circle cx="4" cy="12" r="1.2" fill="currentColor" stroke="none" /><circle cx="4" cy="18" r="1.2" fill="currentColor" stroke="none" /><path d="M9 6h11M9 12h11M9 18h11" /></svg>
+        </button>
+        <button type="button" class="rt-btn" data-rt-command="insertOrderedList" aria-label="Numbered list" aria-pressed="false">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><text x="1.5" y="8.5" font-size="7" fill="currentColor" stroke="none" font-family="sans-serif">1.</text><text x="1.5" y="14.5" font-size="7" fill="currentColor" stroke="none" font-family="sans-serif">2.</text><text x="1.5" y="20.5" font-size="7" fill="currentColor" stroke="none" font-family="sans-serif">3.</text><path d="M9 6h11M9 12h11M9 18h11" /></svg>
+        </button>
+      </div>
+
       <label class="visually-hidden" for="note-content-input">Note content</label>
-      <textarea id="note-content-input" class="note-body-input" data-field="content" placeholder="Start typing your note here..."></textarea>
+      <div id="note-content-input" class="note-body-input" data-field="content" contenteditable="true" role="textbox" aria-multiline="true" data-placeholder="Start typing your note here..."></div>
 
       <!-- Desktop-only footer: same actions as the mobile toolbar's Cancel / Save Note -->
       <div class="note-detail-footer">
