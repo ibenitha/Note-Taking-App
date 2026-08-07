@@ -229,7 +229,7 @@ function applyLocationChange(note, location) {
     storage.saveNotes(state.notes);
   }
   renderDetail.updateLocationUI(note);
-  renderNotes.updateNoteCard(note, state.selectedNoteId);
+  renderNotes.updateNoteCard(note, state.selectedNoteId, state.categories);
 }
 
 function handleLocationSuccess(position) {
