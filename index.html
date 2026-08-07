@@ -14,9 +14,15 @@
 </head>
 <body data-session="loggedOut" data-mobile-view="list" data-app-view="notes">
 
+  <!-- Accessibility: Skip to main content link (WCAG 2.4.1 - Bypass Blocks)
+       Visually hidden off-screen until focused via Tab key. Allows keyboard and
+       screen reader users to skip header/auth blocks and jump directly to notes. -->
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+
   <!-- Auth: shown instead of the notes app until the user logs in. This is a
        simulated, client-side-only login (there is no backend), stored in
-       localStorage purely to demonstrate the flow — see auth.js. -->
+       localStorage purely to demonstrate the flow — see models/auth.js
+       and events/authEvents.js. -->
   <div class="auth-shell">
     <div class="auth-card">
 
@@ -43,20 +49,20 @@
 
         <form class="auth-form" data-auth-form="login" novalidate>
           <label class="auth-label" for="login-email">Email Address</label>
-          <input type="email" id="login-email" class="auth-input" data-field="email" placeholder="email@example.com" autocomplete="username" />
-          <p class="field-error" data-error-for="email"></p>
+          <input type="email" id="login-email" class="auth-input" data-field="email" placeholder="email@example.com" autocomplete="username" aria-describedby="login-email-error" />
+          <p class="field-error" id="login-email-error" data-error-for="email" role="alert"></p>
 
           <div class="auth-label-row">
             <label class="auth-label" for="login-password">Password</label>
             <button type="button" class="link-btn forgot-password-link">Forgot</button>
           </div>
           <div class="password-field">
-            <input type="password" id="login-password" class="auth-input" data-field="password" autocomplete="current-password" />
+            <input type="password" id="login-password" class="auth-input" data-field="password" autocomplete="current-password" aria-describedby="login-password-error" />
             <button type="button" class="password-toggle-btn" aria-label="Show password">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path fill-rule="evenodd" clip-rule="evenodd" fill="currentColor" stroke="none" d="M12.0028 10.1147C10.6709 10.1147 9.59082 11.1509 9.59082 12.4302C9.59082 13.7087 10.671 14.7457 12.0028 14.7457C13.3346 14.7457 14.4148 13.7087 14.4148 12.4302C14.4148 11.1509 13.3348 10.1147 12.0028 10.1147ZM8.09082 12.4302C8.09082 10.3552 9.84276 8.67465 12.0028 8.67465C14.1629 8.67465 15.9148 10.3552 15.9148 12.4302C15.9148 14.504 14.163 16.1857 12.0028 16.1857C9.84261 16.1857 8.09082 14.504 8.09082 12.4302Z" /><path fill-rule="evenodd" clip-rule="evenodd" fill="currentColor" stroke="none" d="M4.97553 7.19457C6.76993 5.73817 9.25074 4.70024 12.002 4.70024C14.7527 4.70024 17.2335 5.73736 19.028 7.19341C20.8031 8.63361 22.004 10.5697 22.004 12.4302C22.004 14.2906 20.8031 16.2267 19.028 17.6669C17.2335 19.123 14.7527 20.1601 12.002 20.1601C9.25074 20.1601 6.76993 19.1221 4.97553 17.6657C3.20075 16.2252 2 14.2892 2 12.4302C2 10.5711 3.20075 8.63505 4.97553 7.19457ZM5.94398 8.29423C4.37026 9.57151 3.5 11.1404 3.5 12.4302C3.5 13.7199 4.37026 15.2888 5.94398 16.5661C7.49808 17.8275 9.64327 18.7201 12.002 18.7201C14.3604 18.7201 16.5056 17.8281 18.0598 16.5671C19.6335 15.2902 20.504 13.7214 20.504 12.4302C20.504 11.139 19.6335 9.57007 18.0598 8.29322C16.5056 7.03223 14.3604 6.14024 12.002 6.14024C9.64327 6.14024 7.49808 7.03287 5.94398 8.29423Z" /></svg>
             </button>
           </div>
-          <p class="field-error" data-error-for="password"></p>
+          <p class="field-error" id="login-password-error" data-error-for="password" role="alert"></p>
           <p class="form-error" role="alert"></p>
 
           <button type="submit" class="btn btn-primary auth-submit-btn">Login</button>
@@ -78,18 +84,18 @@
 
         <form class="auth-form" data-auth-form="signup" novalidate>
           <label class="auth-label" for="signup-email">Email Address</label>
-          <input type="email" id="signup-email" class="auth-input" data-field="email" placeholder="email@example.com" autocomplete="username" />
-          <p class="field-error" data-error-for="email"></p>
+          <input type="email" id="signup-email" class="auth-input" data-field="email" placeholder="email@example.com" autocomplete="username" aria-describedby="signup-email-error" />
+          <p class="field-error" id="signup-email-error" data-error-for="email" role="alert"></p>
 
           <label class="auth-label" for="signup-password">Password</label>
           <div class="password-field">
-            <input type="password" id="signup-password" class="auth-input" data-field="password" autocomplete="new-password" />
+            <input type="password" id="signup-password" class="auth-input" data-field="password" autocomplete="new-password" aria-describedby="signup-password-hint signup-password-error" />
             <button type="button" class="password-toggle-btn" aria-label="Show password">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path fill-rule="evenodd" clip-rule="evenodd" fill="currentColor" stroke="none" d="M12.0028 10.1147C10.6709 10.1147 9.59082 11.1509 9.59082 12.4302C9.59082 13.7087 10.671 14.7457 12.0028 14.7457C13.3346 14.7457 14.4148 13.7087 14.4148 12.4302C14.4148 11.1509 13.3348 10.1147 12.0028 10.1147ZM8.09082 12.4302C8.09082 10.3552 9.84276 8.67465 12.0028 8.67465C14.1629 8.67465 15.9148 10.3552 15.9148 12.4302C15.9148 14.504 14.163 16.1857 12.0028 16.1857C9.84261 16.1857 8.09082 14.504 8.09082 12.4302Z" /><path fill-rule="evenodd" clip-rule="evenodd" fill="currentColor" stroke="none" d="M4.97553 7.19457C6.76993 5.73817 9.25074 4.70024 12.002 4.70024C14.7527 4.70024 17.2335 5.73736 19.028 7.19341C20.8031 8.63361 22.004 10.5697 22.004 12.4302C22.004 14.2906 20.8031 16.2267 19.028 17.6669C17.2335 19.123 14.7527 20.1601 12.002 20.1601C9.25074 20.1601 6.76993 19.1221 4.97553 17.6657C3.20075 16.2252 2 14.2892 2 12.4302C2 10.5711 3.20075 8.63505 4.97553 7.19457ZM5.94398 8.29423C4.37026 9.57151 3.5 11.1404 3.5 12.4302C3.5 13.7199 4.37026 15.2888 5.94398 16.5661C7.49808 17.8275 9.64327 18.7201 12.002 18.7201C14.3604 18.7201 16.5056 17.8281 18.0598 16.5671C19.6335 15.2902 20.504 13.7214 20.504 12.4302C20.504 11.139 19.6335 9.57007 18.0598 8.29322C16.5056 7.03223 14.3604 6.14024 12.002 6.14024C9.64327 6.14024 7.49808 7.03287 5.94398 8.29423Z" /></svg>
             </button>
           </div>
-          <p class="field-hint">At least 8 characters</p>
-          <p class="field-error" data-error-for="password"></p>
+          <p class="field-hint" id="signup-password-hint">At least 8 characters</p>
+          <p class="field-error" id="signup-password-error" data-error-for="password" role="alert"></p>
           <p class="form-error" role="alert"></p>
 
           <button type="submit" class="btn btn-primary auth-submit-btn">Sign up</button>
@@ -111,8 +117,8 @@
 
         <form class="auth-form" data-auth-form="forgot-password" novalidate>
           <label class="auth-label" for="forgot-email">Email Address</label>
-          <input type="email" id="forgot-email" class="auth-input" data-field="email" placeholder="email@example.com" autocomplete="username" />
-          <p class="field-error" data-error-for="email"></p>
+          <input type="email" id="forgot-email" class="auth-input" data-field="email" placeholder="email@example.com" autocomplete="username" aria-describedby="forgot-email-error" />
+          <p class="field-error" id="forgot-email-error" data-error-for="email" role="alert"></p>
           <p class="form-error" role="alert"></p>
 
           <button type="submit" class="btn btn-primary auth-submit-btn">Send Reset Link</button>
@@ -134,22 +140,22 @@
         <form class="auth-form" data-auth-form="reset-password" novalidate>
           <label class="auth-label" for="reset-password">New Password</label>
           <div class="password-field">
-            <input type="password" id="reset-password" class="auth-input" data-field="password" autocomplete="new-password" />
+            <input type="password" id="reset-password" class="auth-input" data-field="password" autocomplete="new-password" aria-describedby="reset-password-hint reset-password-error" />
             <button type="button" class="password-toggle-btn" aria-label="Show password">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path fill-rule="evenodd" clip-rule="evenodd" fill="currentColor" stroke="none" d="M12.0028 10.1147C10.6709 10.1147 9.59082 11.1509 9.59082 12.4302C9.59082 13.7087 10.671 14.7457 12.0028 14.7457C13.3346 14.7457 14.4148 13.7087 14.4148 12.4302C14.4148 11.1509 13.3348 10.1147 12.0028 10.1147ZM8.09082 12.4302C8.09082 10.3552 9.84276 8.67465 12.0028 8.67465C14.1629 8.67465 15.9148 10.3552 15.9148 12.4302C15.9148 14.504 14.163 16.1857 12.0028 16.1857C9.84261 16.1857 8.09082 14.504 8.09082 12.4302Z" /><path fill-rule="evenodd" clip-rule="evenodd" fill="currentColor" stroke="none" d="M4.97553 7.19457C6.76993 5.73817 9.25074 4.70024 12.002 4.70024C14.7527 4.70024 17.2335 5.73736 19.028 7.19341C20.8031 8.63361 22.004 10.5697 22.004 12.4302C22.004 14.2906 20.8031 16.2267 19.028 17.6669C17.2335 19.123 14.7527 20.1601 12.002 20.1601C9.25074 20.1601 6.76993 19.1221 4.97553 17.6657C3.20075 16.2252 2 14.2892 2 12.4302C2 10.5711 3.20075 8.63505 4.97553 7.19457ZM5.94398 8.29423C4.37026 9.57151 3.5 11.1404 3.5 12.4302C3.5 13.7199 4.37026 15.2888 5.94398 16.5661C7.49808 17.8275 9.64327 18.7201 12.002 18.7201C14.3604 18.7201 16.5056 17.8281 18.0598 16.5671C19.6335 15.2902 20.504 13.7214 20.504 12.4302C20.504 11.139 19.6335 9.57007 18.0598 8.29322C16.5056 7.03223 14.3604 6.14024 12.002 6.14024C9.64327 6.14024 7.49808 7.03287 5.94398 8.29423Z" /></svg>
             </button>
           </div>
-          <p class="field-hint">At least 8 characters</p>
-          <p class="field-error" data-error-for="password"></p>
+          <p class="field-hint" id="reset-password-hint">At least 8 characters</p>
+          <p class="field-error" id="reset-password-error" data-error-for="password" role="alert"></p>
 
           <label class="auth-label" for="reset-confirm-password">Confirm New Password</label>
           <div class="password-field">
-            <input type="password" id="reset-confirm-password" class="auth-input" data-field="confirm-password" autocomplete="new-password" />
+            <input type="password" id="reset-confirm-password" class="auth-input" data-field="confirm-password" autocomplete="new-password" aria-describedby="reset-confirm-password-error" />
             <button type="button" class="password-toggle-btn" aria-label="Show password">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path fill-rule="evenodd" clip-rule="evenodd" fill="currentColor" stroke="none" d="M12.0028 10.1147C10.6709 10.1147 9.59082 11.1509 9.59082 12.4302C9.59082 13.7087 10.671 14.7457 12.0028 14.7457C13.3346 14.7457 14.4148 13.7087 14.4148 12.4302C14.4148 11.1509 13.3348 10.1147 12.0028 10.1147ZM8.09082 12.4302C8.09082 10.3552 9.84276 8.67465 12.0028 8.67465C14.1629 8.67465 15.9148 10.3552 15.9148 12.4302C15.9148 14.504 14.163 16.1857 12.0028 16.1857C9.84261 16.1857 8.09082 14.504 8.09082 12.4302Z" /><path fill-rule="evenodd" clip-rule="evenodd" fill="currentColor" stroke="none" d="M4.97553 7.19457C6.76993 5.73817 9.25074 4.70024 12.002 4.70024C14.7527 4.70024 17.2335 5.73736 19.028 7.19341C20.8031 8.63361 22.004 10.5697 22.004 12.4302C22.004 14.2906 20.8031 16.2267 19.028 17.6669C17.2335 19.123 14.7527 20.1601 12.002 20.1601C9.25074 20.1601 6.76993 19.1221 4.97553 17.6657C3.20075 16.2252 2 14.2892 2 12.4302C2 10.5711 3.20075 8.63505 4.97553 7.19457ZM5.94398 8.29423C4.37026 9.57151 3.5 11.1404 3.5 12.4302C3.5 13.7199 4.37026 15.2888 5.94398 16.5661C7.49808 17.8275 9.64327 18.7201 12.002 18.7201C14.3604 18.7201 16.5056 17.8281 18.0598 16.5671C19.6335 15.2902 20.504 13.7214 20.504 12.4302C20.504 11.139 19.6335 9.57007 18.0598 8.29322C16.5056 7.03223 14.3604 6.14024 12.002 6.14024C9.64327 6.14024 7.49808 7.03287 5.94398 8.29423Z" /></svg>
             </button>
           </div>
-          <p class="field-error" data-error-for="confirm-password"></p>
+          <p class="field-error" id="reset-confirm-password-error" data-error-for="confirm-password" role="alert"></p>
           <p class="form-error" role="alert"></p>
 
           <button type="submit" class="btn btn-primary auth-submit-btn">Reset Password</button>
@@ -161,6 +167,8 @@
 
   <div class="app-shell">
 
+  <!-- Header: logo, desktop search, and the settings icon. On mobile,
+       search and settings move into the bottom nav instead. -->
   <header class="app-header">
     <div class="logo">
       <svg width="95" height="28" viewBox="0 0 95 28" fill="none" aria-hidden="true">
@@ -182,7 +190,10 @@
     <form class="header-search" role="search">
       <label for="search-input" class="visually-hidden">Search notes</label>
       <svg class="header-search-icon" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" clip-rule="evenodd" d="M11.2485 3.50024C7.22315 3.50024 3.95996 6.76343 3.95996 10.7888C3.95996 14.8141 7.22315 18.0773 11.2485 18.0773C15.2738 18.0773 18.537 14.8141 18.537 10.7888C18.537 6.76343 15.2738 3.50024 11.2485 3.50024ZM2.45996 10.7888C2.45996 5.93501 6.39472 2.00024 11.2485 2.00024C16.1023 2.00024 20.037 5.93501 20.037 10.7888C20.037 15.6426 16.1023 19.5773 11.2485 19.5773C6.39472 19.5773 2.45996 15.6426 2.45996 10.7888Z" /><path fill-rule="evenodd" clip-rule="evenodd" d="M16.7361 15.6477L22.3516 21.2486L21.2923 22.3106L15.6768 16.7097L16.7361 15.6477Z" /></svg>
-      <input type="search" id="search-input" placeholder="Search by title, content, or tags..." />
+      <input type="search" id="search-input" placeholder="Search by title, content, or tags..." autocomplete="off" />
+      <button type="button" class="search-clear-btn" aria-label="Clear search" hidden>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6L18 18" /><path d="M18 6L6 18" /></svg>
+      </button>
     </form>
 
     <button type="button" class="icon-btn settings-btn" aria-label="Settings">
@@ -190,7 +201,9 @@
     </button>
   </header>
 
-  <div class="app-body">
+  <!-- Semantic main content area with id="main-content" for the skip link target
+       tabindex="-1" allows keyboard focus to move directly to main when activated -->
+  <main id="main-content" class="app-body" tabindex="-1">
 
     <!-- Sidebar: desktop-only navigation. On mobile the same destinations are reachable via the bottom nav. -->
     <nav class="sidebar" aria-label="Main navigation">
@@ -207,10 +220,12 @@
       </ul>
 
       <h2 class="sidebar-heading">Tags</h2>
-      <!-- Filled in by ui.js's renderTagList() from whatever tags exist on the notes. -->
+      <!-- Filled in by ui/renderTags.js's renderTagList() from whatever tags exist on the notes. -->
       <ul class="tag-list"></ul>
     </nav>
 
+    <!-- Notes List: the middle column showing whichever notes match the
+         current view (All Notes / Archived / a tag / a search). -->
     <main class="notes-list-panel" aria-label="Notes list">
       <h1 class="panel-title">All Notes</h1>
       <p class="panel-subtitle" hidden></p>
@@ -220,13 +235,14 @@
         Create New Note
       </button>
 
-      <!-- Filled in by ui.js's renderAllNotes(). Left empty here on purpose:
-           the note cards are created dynamically from whatever is in storage. -->
+      <!-- Filled in by ui/renderNotes.js's renderAllNotes(). Left empty here
+           on purpose: the note cards are created dynamically from whatever
+           is in storage. -->
       <ul class="notes-list"></ul>
     </main>
 
-    <!-- The whole detail panel is a form: title, tags, and content are all
-         editable fields used for both creating and editing a note. -->
+    <!-- Note Detail: the whole panel is a form. Title, tags, and content are
+         all editable fields used for both creating and editing a note. -->
     <form class="note-detail-panel" aria-label="Note detail">
 
       <!-- Mobile-only toolbar: replaces the desktop footer + action panel with icon buttons -->
@@ -307,7 +323,10 @@
       <div class="mobile-search-field">
         <svg class="mobile-search-icon" width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" clip-rule="evenodd" d="M11.2485 3.50024C7.22315 3.50024 3.95996 6.76343 3.95996 10.7888C3.95996 14.8141 7.22315 18.0773 11.2485 18.0773C15.2738 18.0773 18.537 14.8141 18.537 10.7888C18.537 6.76343 15.2738 3.50024 11.2485 3.50024ZM2.45996 10.7888C2.45996 5.93501 6.39472 2.00024 11.2485 2.00024C16.1023 2.00024 20.037 5.93501 20.037 10.7888C20.037 15.6426 16.1023 19.5773 11.2485 19.5773C6.39472 19.5773 2.45996 15.6426 2.45996 10.7888Z" /><path fill-rule="evenodd" clip-rule="evenodd" d="M16.7361 15.6477L22.3516 21.2486L21.2923 22.3106L15.6768 16.7097L16.7361 15.6477Z" /></svg>
         <label class="visually-hidden" for="mobile-search-input">Search notes</label>
-        <input type="search" id="mobile-search-input" class="mobile-search-input" placeholder="Search by title, content, or tags..." />
+        <input type="search" id="mobile-search-input" class="mobile-search-input" placeholder="Search by title, content, or tags..." autocomplete="off" />
+        <button type="button" class="search-clear-btn" aria-label="Clear search" hidden>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6L18 18" /><path d="M18 6L6 18" /></svg>
+        </button>
       </div>
       <p class="mobile-search-subtitle"></p>
       <ul class="mobile-search-results notes-list"></ul>
@@ -345,7 +364,7 @@
       <h1 class="panel-title">Settings</h1>
       <div class="settings-body">
         <nav class="settings-nav" aria-label="Settings sections">
-          <button type="button" class="settings-nav-item is-active" data-settings-section="color">
+          <button type="button" class="settings-nav-item is-active" data-settings-section="color" aria-current="page">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12.0548 2.99994V4.37184M12.0548 19.628V20.9999M21.0547 12H19.6828M4.42659 12H3.05469M18.4185 5.63576L17.4485 6.60583M6.66105 17.3937L5.69099 18.3638M18.4185 18.3638L17.4485 17.3937M6.66105 6.6063L5.69099 5.63624" /><path fill-rule="evenodd" clip-rule="evenodd" d="M12.0549 7.80463C14.3725 7.80463 16.2504 9.68345 16.2504 12.0001C16.2504 14.3177 14.3725 16.1965 12.0549 16.1965C9.73723 16.1965 7.85938 14.3177 7.85938 12.0001C7.85938 9.68345 9.73723 7.80463 12.0549 7.80463Z" /></svg>
             <span>Color Theme</span>
             <svg class="settings-nav-chevron" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" clip-rule="evenodd" d="M9.46967 7.46967C9.76256 7.17678 10.2374 7.17678 10.5303 7.46967L14.5303 11.4697C14.8232 11.7626 14.8232 12.2374 14.5303 12.5303L10.5303 16.5303C10.2374 16.8232 9.76256 16.8232 9.46967 16.5303C9.17678 16.2374 9.17678 15.7626 9.46967 15.4697L12.9393 12L9.46967 8.53033C9.17678 8.23744 9.17678 7.76256 9.46967 7.46967Z" /></svg>
@@ -408,7 +427,7 @@
 
             <div class="theme-options">
             <label class="theme-option">
-              <span class="theme-option-icon" style="font-size:16px;font-weight:600;font-family:Arial,sans-serif">Aa</span>
+              <span class="theme-option-icon" style="font-size:16px;font-weight:600;font-family:Arial,sans-serif" aria-hidden="true">Aa</span>
               <input type="radio" name="font-theme" value="sans-serif" checked />
               <span class="theme-option-text">
                 <strong>Sans-serif</strong>
@@ -416,7 +435,7 @@
               </span>
             </label>
             <label class="theme-option">
-              <span class="theme-option-icon" style="font-size:16px;font-weight:600;font-family:Georgia,serif">Aa</span>
+              <span class="theme-option-icon" style="font-size:16px;font-weight:600;font-family:Georgia,serif" aria-hidden="true">Aa</span>
               <input type="radio" name="font-theme" value="serif" />
               <span class="theme-option-text">
                 <strong>Serif</strong>
@@ -424,7 +443,7 @@
               </span>
             </label>
             <label class="theme-option">
-              <span class="theme-option-icon" style="font-size:14px;font-weight:600;font-family:monospace">Aa</span>
+              <span class="theme-option-icon" style="font-size:14px;font-weight:600;font-family:monospace" aria-hidden="true">Aa</span>
               <input type="radio" name="font-theme" value="monospace" />
               <span class="theme-option-text">
                 <strong>Monospace</strong>
@@ -447,7 +466,7 @@
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path fill-rule="evenodd" clip-rule="evenodd" fill="currentColor" stroke="none" d="M12.0028 10.1147C10.6709 10.1147 9.59082 11.1509 9.59082 12.4302C9.59082 13.7087 10.671 14.7457 12.0028 14.7457C13.3346 14.7457 14.4148 13.7087 14.4148 12.4302C14.4148 11.1509 13.3348 10.1147 12.0028 10.1147ZM8.09082 12.4302C8.09082 10.3552 9.84276 8.67465 12.0028 8.67465C14.1629 8.67465 15.9148 10.3552 15.9148 12.4302C15.9148 14.504 14.163 16.1857 12.0028 16.1857C9.84261 16.1857 8.09082 14.504 8.09082 12.4302Z" /><path fill-rule="evenodd" clip-rule="evenodd" fill="currentColor" stroke="none" d="M4.97553 7.19457C6.76993 5.73817 9.25074 4.70024 12.002 4.70024C14.7527 4.70024 17.2335 5.73736 19.028 7.19341C20.8031 8.63361 22.004 10.5697 22.004 12.4302C22.004 14.2906 20.8031 16.2267 19.028 17.6669C17.2335 19.123 14.7527 20.1601 12.002 20.1601C9.25074 20.1601 6.76993 19.1221 4.97553 17.6657C3.20075 16.2252 2 14.2892 2 12.4302C2 10.5711 3.20075 8.63505 4.97553 7.19457ZM5.94398 8.29423C4.37026 9.57151 3.5 11.1404 3.5 12.4302C3.5 13.7199 4.37026 15.2888 5.94398 16.5661C7.49808 17.8275 9.64327 18.7201 12.002 18.7201C14.3604 18.7201 16.5056 17.8281 18.0598 16.5671C19.6335 15.2902 20.504 13.7214 20.504 12.4302C20.504 11.139 19.6335 9.57007 18.0598 8.29322C16.5056 7.03223 14.3604 6.14024 12.002 6.14024C9.64327 6.14024 7.49808 7.03287 5.94398 8.29423Z" /></svg>
                 </button>
               </div>
-              <p class="field-error" data-error-for="old-password"></p>
+              <p class="field-error" data-error-for="old-password" role="alert"></p>
 
               <label class="auth-label" for="new-password">New Password</label>
               <div class="password-field">
@@ -457,7 +476,7 @@
                 </button>
               </div>
               <p class="field-hint">At least 8 characters</p>
-              <p class="field-error" data-error-for="new-password"></p>
+              <p class="field-error" data-error-for="new-password" role="alert"></p>
 
               <label class="auth-label" for="confirm-new-password">Confirm New Password</label>
               <div class="password-field">
@@ -466,7 +485,7 @@
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path fill-rule="evenodd" clip-rule="evenodd" fill="currentColor" stroke="none" d="M12.0028 10.1147C10.6709 10.1147 9.59082 11.1509 9.59082 12.4302C9.59082 13.7087 10.671 14.7457 12.0028 14.7457C13.3346 14.7457 14.4148 13.7087 14.4148 12.4302C14.4148 11.1509 13.3348 10.1147 12.0028 10.1147ZM8.09082 12.4302C8.09082 10.3552 9.84276 8.67465 12.0028 8.67465C14.1629 8.67465 15.9148 10.3552 15.9148 12.4302C15.9148 14.504 14.163 16.1857 12.0028 16.1857C9.84261 16.1857 8.09082 14.504 8.09082 12.4302Z" /><path fill-rule="evenodd" clip-rule="evenodd" fill="currentColor" stroke="none" d="M4.97553 7.19457C6.76993 5.73817 9.25074 4.70024 12.002 4.70024C14.7527 4.70024 17.2335 5.73736 19.028 7.19341C20.8031 8.63361 22.004 10.5697 22.004 12.4302C22.004 14.2906 20.8031 16.2267 19.028 17.6669C17.2335 19.123 14.7527 20.1601 12.002 20.1601C9.25074 20.1601 6.76993 19.1221 4.97553 17.6657C3.20075 16.2252 2 14.2892 2 12.4302C2 10.5711 3.20075 8.63505 4.97553 7.19457ZM5.94398 8.29423C4.37026 9.57151 3.5 11.1404 3.5 12.4302C3.5 13.7199 4.37026 15.2888 5.94398 16.5661C7.49808 17.8275 9.64327 18.7201 12.002 18.7201C14.3604 18.7201 16.5056 17.8281 18.0598 16.5671C19.6335 15.2902 20.504 13.7214 20.504 12.4302C20.504 11.139 19.6335 9.57007 18.0598 8.29322C16.5056 7.03223 14.3604 6.14024 12.002 6.14024C9.64327 6.14024 7.49808 7.03287 5.94398 8.29423Z" /></svg>
                 </button>
               </div>
-              <p class="field-error" data-error-for="confirm-new-password"></p>
+              <p class="field-error" data-error-for="confirm-new-password" role="alert"></p>
               <p class="form-error" role="alert"></p>
 
               <button type="submit" class="btn btn-primary change-password-btn">Save Password</button>
@@ -477,9 +496,10 @@
     </section>
   </div>
 
-  <!-- Reusable confirmation modal. main.js fills in the title, message, and
-       confirm button per action instead of duplicating this markup for
-       delete vs. archive. -->
+  <!-- Modals: one reusable confirmation modal. Whichever events/ module
+       needs it (e.g. noteEvents.js for delete/archive) calls main.js's
+       openConfirmModal() with its own title/message/confirm button text,
+       instead of duplicating this markup per action. -->
   <div class="modal-overlay" hidden>
     <div class="modal" role="alertdialog" aria-modal="true" aria-labelledby="modal-title" aria-describedby="modal-message">
       <div class="modal-header">
@@ -504,7 +524,7 @@
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><path d="M9 22V12h6v10" /></svg>
       <span>Home</span>
     </a>
-    <a href="#" class="bottom-nav-item mobile-search-btn">
+    <a href="#" class="bottom-nav-item mobile-search-btn" data-nav-view="search">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" clip-rule="evenodd" d="M11.2485 3.50024C7.22315 3.50024 3.95996 6.76343 3.95996 10.7888C3.95996 14.8141 7.22315 18.0773 11.2485 18.0773C15.2738 18.0773 18.537 14.8141 18.537 10.7888C18.537 6.76343 15.2738 3.50024 11.2485 3.50024ZM2.45996 10.7888C2.45996 5.93501 6.39472 2.00024 11.2485 2.00024C16.1023 2.00024 20.037 5.93501 20.037 10.7888C20.037 15.6426 16.1023 19.5773 11.2485 19.5773C6.39472 19.5773 2.45996 15.6426 2.45996 10.7888Z" /><path fill-rule="evenodd" clip-rule="evenodd" d="M16.7361 15.6477L22.3516 21.2486L21.2923 22.3106L15.6768 16.7097L16.7361 15.6477Z" /></svg>
       <span>Search</span>
     </a>
@@ -516,7 +536,7 @@
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path fill-rule="evenodd" clip-rule="evenodd" d="M3.01582 5.96647C3.01874 4.5547 4.08608 3.28888 5.47158 3.0505C5.75568 3.00088 9.08808 3.00769 10.4668 3.00866C11.8309 3.00964 12.9936 3.50001 13.9568 4.4613C16.002 6.50257 18.0452 8.5458 20.0855 10.591C21.2929 11.8004 21.3095 13.6568 20.1069 14.8701C18.3721 16.6214 16.6285 18.364 14.8782 20.0988C13.6659 21.3004 11.8095 21.2848 10.5991 20.0774C8.53544 18.0195 6.47178 15.9617 4.41688 13.8951C3.62197 13.0954 3.15301 12.1292 3.0489 10.9996C2.96522 10.0967 3.01387 6.73998 3.01582 5.96647Z" /><path fill-rule="evenodd" clip-rule="evenodd" d="M9.90712 8.31531C9.90322 9.18514 9.17642 9.90027 8.29784 9.89832C7.42509 9.89638 6.69828 9.1686 6.70315 8.30169C6.70899 7.39683 7.42509 6.69144 8.33578 6.69533C9.19977 6.69825 9.91101 7.43089 9.90712 8.31531Z" /></svg>
       <span>Tags</span>
     </a>
-    <a href="#" class="bottom-nav-item settings-nav-btn">
+    <a href="#" class="bottom-nav-item settings-nav-btn" data-nav-view="settings">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" clip-rule="evenodd" d="M8.95894 4.52859C8.95894 3.13292 10.0904 2 11.4876 2H12.661C12.6804 2 12.6984 2.00046 12.7073 2.00068L12.7089 2.00072C12.7176 2.00094 12.7198 2.00097 12.7198 2.00097C12.7279 2.00097 12.7356 2.0011 12.7437 2.00137C14.1398 2.04671 15.2361 3.20962 15.2024 4.60334C15.206 4.76705 15.2515 4.92741 15.3354 5.07025L15.3382 5.07483L15.3399 5.07761C15.3409 5.07933 15.3419 5.08105 15.3429 5.08277C15.6319 5.57139 16.263 5.7328 16.751 5.44326L16.7604 5.4377C17.9745 4.74097 19.5236 5.15609 20.2251 6.36845L20.2256 6.36946L20.8085 7.38038C20.8228 7.40521 20.8356 7.43077 20.8469 7.45692C21.4855 8.65772 21.0627 10.1553 19.8801 10.8434L19.875 10.8464C19.719 10.9355 19.589 11.0656 19.4999 11.2221L19.4912 11.2368L19.4899 11.2389C19.2108 11.7285 19.3782 12.351 19.8637 12.6354C19.8646 12.6359 19.8654 12.6364 19.8664 12.6368C19.8707 12.6392 19.8755 12.6418 19.8806 12.6447C19.8907 12.6504 19.9038 12.6581 19.9188 12.6677C21.1086 13.3775 21.5063 14.9144 20.8064 16.1134L20.8021 16.1208L20.1879 17.1457C19.4858 18.3525 17.9397 18.768 16.7276 18.0717C16.5748 17.985 16.405 17.937 16.2315 17.9311H16.2211C15.6544 17.9363 15.1983 18.3996 15.2022 18.9662L15.2023 18.9766C15.1926 20.3736 14.0576 21.5 12.661 21.5H11.4915C10.0895 21.5 8.95258 20.3651 8.95019 18.9642C8.94811 18.7998 8.90379 18.638 8.82137 18.4948C8.81522 18.4852 8.80928 18.4755 8.80357 18.4657C8.51956 17.9768 7.89243 17.8111 7.40408 18.0957C7.4039 18.0958 7.40425 18.0956 7.40408 18.0957L7.4006 18.0978C7.39524 18.101 7.38826 18.1051 7.38004 18.1096C7.37735 18.1111 7.37448 18.1127 7.37142 18.1143C6.14523 18.7863 4.60786 18.3419 3.92893 17.121L3.35105 16.125C3.34937 16.1223 3.34764 16.1195 3.34587 16.1166C3.34199 16.1102 3.33775 16.103 3.33327 16.0951C2.64187 14.8844 3.06073 13.3421 4.2705 12.648C4.5927 12.4616 4.79072 12.1178 4.79072 11.7471C4.79072 11.3748 4.59217 11.0309 4.26969 10.8448L4.26869 10.8442C3.05823 10.143 2.6409 8.59297 3.33981 7.37885L3.34889 7.36351L3.97066 6.34043C4.67419 5.13393 6.21931 4.72206 7.43089 5.41734L7.43958 5.42233C7.58583 5.50887 7.75058 5.55514 7.91858 5.5572C8.48522 5.55752 8.94864 5.10261 8.95894 4.53536V4.52859ZM11.4876 3.5C10.9193 3.5 10.459 3.96081 10.459 4.52859V4.55166C10.4396 5.94296 9.30378 7.06133 7.91157 7.05719L7.90655 7.05717C7.47421 7.05299 7.05221 6.93489 6.68089 6.71639C6.18309 6.43315 5.55103 6.60418 5.2646 7.09922L5.25634 7.11314L4.63597 8.13391C4.3556 8.62928 4.52664 9.26012 5.02054 9.5462L4.64462 10.1952L5.01954 9.54563C5.80625 9.9997 6.29072 10.8389 6.29072 11.7471C6.29072 12.6545 5.80606 13.4936 5.01954 13.9476L5.01752 13.9487C4.52954 14.2284 4.35749 14.8473 4.62842 15.3381C4.62889 15.3388 4.62937 15.3396 4.62984 15.3404C4.63326 15.346 4.63695 15.3522 4.64083 15.359L5.2301 16.3747L5.23807 16.3888C5.51415 16.8892 6.14106 17.0733 6.64377 16.8026C6.64767 16.8003 6.65223 16.7977 6.65734 16.7948C7.8539 16.1036 9.38417 16.5044 10.0886 17.6918C10.0893 17.6929 10.09 17.6939 10.0906 17.6949C10.097 17.705 10.1026 17.7144 10.1038 17.7164L10.1063 17.7206C10.327 18.0936 10.446 18.5185 10.4502 18.9525V18.9597C10.4502 19.5338 10.9159 20 11.4915 20H12.661C13.2322 20 13.6961 19.5407 13.7022 18.9703C13.6959 17.5771 14.8193 16.4408 16.213 16.4312L16.2182 16.4311H16.2425L16.2618 16.4314C16.6883 16.4424 17.1026 16.5593 17.4705 16.7686L17.4738 16.7705C17.9701 17.0561 18.6052 16.886 18.8927 16.3891L18.8984 16.3791L19.5129 15.354C19.7967 14.8637 19.6309 14.2363 19.1414 13.9506C19.1379 13.9486 19.1344 13.9465 19.131 13.9444C17.9216 13.2546 17.4973 11.7173 18.1815 10.5054C18.1909 10.4881 18.1988 10.4752 18.2026 10.4689C18.424 10.0849 18.7441 9.7657 19.1277 9.54579C19.6204 9.25766 19.789 8.62769 19.5072 8.13325C19.4959 8.11355 19.4856 8.0934 19.4763 8.07286L18.9267 7.11966C18.9267 7.11955 18.9268 7.11976 18.9267 7.11966C18.6403 6.62494 18.0084 6.4537 17.5107 6.73666C16.3115 7.444 14.7648 7.04765 14.0538 5.84969L14.0507 5.84463L14.0491 5.84188C14.0481 5.8402 14.0471 5.83851 14.0461 5.83682C13.8256 5.46423 13.7065 5.04028 13.7022 4.60591C13.7021 4.59562 13.7023 4.58532 13.7026 4.57504C13.7206 4.00281 13.274 3.52385 12.7032 3.50088C12.6904 3.50073 12.6794 3.50045 12.673 3.50029L12.6714 3.50025C12.6631 3.50004 12.6607 3.50001 12.6605 3.5H11.4876ZM12.0783 10.0305C11.1293 10.0305 10.3608 10.799 10.3608 11.748C10.3608 12.6969 11.1293 13.4654 12.0783 13.4654C13.0272 13.4654 13.7957 12.6969 13.7957 11.748C13.7957 10.799 13.0272 10.0305 12.0783 10.0305ZM8.86076 11.748C8.86076 9.9706 10.3009 8.53051 12.0783 8.53051C13.8556 8.53051 15.2957 9.9706 15.2957 11.748C15.2957 13.5253 13.8556 14.9654 12.0783 14.9654C10.3009 14.9654 8.86076 13.5253 8.86076 11.748Z" /></svg>
       <span>Settings</span>
     </a>
@@ -526,12 +546,12 @@
     <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 5C12.4141 5 12.75 5.33582 12.75 5.75V11H18C18.4141 11 18.75 11.3358 18.75 11.75C18.75 11.9766 18.6494 12.1797 18.4907 12.3171C18.3594 12.431 18.1875 12.5 18 12.5H12.75V17.75C12.75 18.1642 12.4141 18.5 12 18.5C11.5859 18.5 11.25 18.1642 11.25 17.75V12.5H6C5.58594 12.5 5.25 12.1642 5.25 11.75C5.25 11.3358 5.58594 11 6 11H11.25V5.75C11.25 5.33582 11.5859 5 12 5Z" /></svg>
   </button>
 
-  </div>
+  </main>
 
-  <!-- Brief success feedback after an action like saving a note.
+  <!-- Toast: brief success feedback after an action like saving a note.
        aria-live announces the message to screen readers as soon as it changes.
        The action link is optional (e.g. "Archived Notes" after archiving) —
-       ui.js hides it when a toast has nothing to link to. -->
+       ui/feedback.js hides it when a toast has nothing to link to. -->
   <div class="toast" aria-live="polite" hidden>
     <svg class="toast-icon" width="20" height="20" viewBox="0 0 19 19" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" clip-rule="evenodd" d="M13.493 7.722L8.875 12.34C8.728 12.487 8.537 12.56 8.345 12.56C8.152 12.56 7.961 12.487 7.814 12.34L5.505 10.031C5.212 9.738 5.212 9.263 5.505 8.97C5.798 8.677 6.272 8.677 6.565 8.97L8.345 10.749L12.432 6.661C12.725 6.368 13.2 6.368 13.493 6.661C13.786 6.954 13.786 7.429 13.493 7.722ZM9.5 0C4.262 0 0 4.262 0 9.5C0 14.739 4.262 19 9.5 19C14.738 19 19 14.739 19 9.5C19 4.262 14.738 0 9.5 0Z" /></svg>
     <span class="toast-message"></span>

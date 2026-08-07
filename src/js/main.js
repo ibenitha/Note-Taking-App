@@ -1,101 +1,49 @@
 // main.js
 //
-// This is the entry point script, loaded as an ES6 module from index.html.
-// It imports the other modules and wires them together: storage.js reads
-// and writes data, noteManager.js applies the rules for that data, ui.js
-// draws it on screen, and this file connects events to all of that.
+// The entry point script, loaded as an ES6 module from index.html. It has
+// two jobs:
+//
+// 1. Bootstrap: load saved notes/preferences/session from storage.js, and
+//    render the app for the first time.
+// 2. Core engine: hold the app's shared state (the notes array, which
+//    view is active, which note is selected, ...) and the render/action
+//    functions that need that state — renderApp(), discardUnsavedNewNote(),
+//    the confirmation modal, and so on.
+//
+// Everything else — note editing, navigation, settings, auth, keyboard
+// shortcuts — lives in its own events/ module. Those modules never touch
+// storage or the notes array directly; they call the small "core" API
+// this file builds and hands to each of them, so there is exactly one
+// place that owns the app's shared state.
 
-import * as storage from "./storage.js";
-import * as noteManager from "./noteManager.js";
-import * as ui from "./ui.js";
-import * as themes from "./themes.js";
-import * as auth from "./auth.js";
+import * as storage from "./storage/storage.js";
+import * as noteManager from "./models/noteManager.js";
+import * as themes from "./themes/themes.js";
+import * as renderNotes from "./ui/renderNotes.js";
+import * as renderDetail from "./ui/renderDetail.js";
+import * as renderTags from "./ui/renderTags.js";
+import * as feedback from "./ui/feedback.js";
+import { isRequired } from "./utils/validation.js";
 
-// Reused as the confirmation modal's icon, matching the same trash/archive
-// icons already used on the Delete Note / Archive Note buttons elsewhere.
-const TRASH_ICON_PATHS =
-  '<path stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M14.8521 3.87899L15.6702 5.66378H18.3097C19.1212 5.66378 19.7791 6.32166 19.7791 7.1332V8.2214C19.7791 8.77626 19.3293 9.22606 18.7745 9.22606H5.00466C4.4498 9.22606 4 8.77626 4 8.2214V7.1332C4 6.32166 4.65788 5.66378 5.46943 5.66378H8.10885L8.92705 3.87899C9.17255 3.34339 9.70775 3 10.2969 3H13.4821C14.0713 3 14.6065 3.34339 14.8521 3.87899Z" />' +
-  '<path stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M18.24 9.30078V17.9865C18.24 19.6511 16.9073 21.0005 15.2634 21.0005H8.51661C6.8727 21.0005 5.54004 19.6511 5.54004 17.9865V9.30078" />' +
-  '<path stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M10.1992 12.8164V17.3248M13.5796 12.8164V17.3248" />';
-const ARCHIVE_ICON_PATHS =
-  '<path stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M21 7.78216V16.2169C21 19.165 18.9188 21 15.9736 21H8.02638C5.08119 21 3 19.165 3 16.2159V7.78216C3 4.83405 5.08119 3 8.02638 3H15.9736C18.9188 3 21 4.84281 21 7.78216Z" />' +
-  '<path stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M15 14L11.9982 17L9 14" />' +
-  '<path stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M11.998 17V10" />' +
-  '<path stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M20.9336 7H3.05859" />';
+import * as noteEvents from "./events/noteEvents.js";
+import * as navigationEvents from "./events/navigationEvents.js";
+import * as settingsEvents from "./events/settingsEvents.js";
+import * as authEvents from "./events/authEvents.js";
+import * as keyboardEvents from "./events/keyboardEvents.js";
 
-// Matches the "@media (min-width: 900px)" desktop breakpoint in styles.css.
-const DESKTOP_BREAKPOINT_PX = 900;
-
-// --- Element references ---------------------------------------------------
-// Looked up once, at the top, so every function below can just use them.
+// --- Element references used directly by the core engine -------------------
 
 const notesList = document.querySelector(".notes-list");
-const backButton = document.querySelector(".back-btn");
-const tagList = document.querySelector(".tag-list");
+const titleInput = document.querySelector('[data-field="title"]');
+const submitButtons = document.querySelectorAll('.note-detail-panel [type="submit"]');
 
-const settingsButton = document.querySelector(".settings-btn");
-const settingsNavButton = document.querySelector(".settings-nav-btn");
-const homeNavButton = document.querySelector(".home-nav-btn");
-const allNotesLink = document.querySelector(".all-notes-link");
-const archivedNotesLinks = document.querySelectorAll(".archived-notes-link");
-const settingsNav = document.querySelector(".settings-nav");
-const settingsSections = document.querySelectorAll(".settings-section");
-const settingsNavItems = document.querySelectorAll(".settings-nav-item");
 const colorThemeRadios = document.querySelectorAll('input[name="color-theme"]');
 const fontThemeRadios = document.querySelectorAll('input[name="font-theme"]');
-const applyThemeButton = document.querySelector(".apply-theme-btn");
-const applyFontButton = document.querySelector(".apply-font-btn");
 
-const createNoteButton = document.querySelector(".create-note-btn");
-const fabButton = document.querySelector(".fab");
-const noteForm = document.querySelector(".note-detail-panel");
-const cancelButtons = document.querySelectorAll(".cancel-btn");
-const titleInput = document.querySelector('[data-field="title"]');
-const tagsInput = document.querySelector('[data-field="tags"]');
-const contentInput = document.querySelector('[data-field="content"]');
-const submitButtons = noteForm.querySelectorAll('[type="submit"]');
-
-const deleteButtons = document.querySelectorAll(".delete-btn");
-const archiveButtons = document.querySelectorAll(".archive-btn");
-const locationButton = document.querySelector(".location-btn");
 const modalOverlay = document.querySelector(".modal-overlay");
 const modalConfirmButton = document.querySelector(".modal-confirm-btn");
 const modalCancelButton = document.querySelector(".modal-cancel-btn");
 const toastCloseButton = document.querySelector(".toast-close-btn");
-
-const searchForm = document.querySelector(".header-search");
-const searchInput = document.querySelector("#search-input");
-const mobileSearchButton = document.querySelector(".mobile-search-btn");
-
-// Mobile-only panels and their controls. The panels themselves are shown
-// and hidden purely by CSS (via data-mobile-view on <body>), so only the
-// controls inside them need a JS reference.
-const mobileSearchInput = document.querySelector("#mobile-search-input");
-const mobileSearchSubtitle = document.querySelector(".mobile-search-subtitle");
-const mobileSearchResultsList = document.querySelector(".mobile-search-results");
-const mobileTagsButton = document.querySelector(".mobile-tags-btn");
-const mobileTagsList = document.querySelector(".mobile-tags-list");
-const mobileTagBackButton = document.querySelector(".mobile-tag-back-btn");
-const mobileTagDetailTitle = document.querySelector(".mobile-tag-detail-title strong");
-const mobileTagDetailSubtitle = document.querySelector(".mobile-tag-detail-subtitle");
-const mobileTagDetailList = document.querySelector(".mobile-tag-detail-list");
-const mobileSettingsBackButton = document.querySelector(".mobile-settings-back-btn");
-const mobileSettingsSubContent = document.querySelector(".mobile-settings-sub-content");
-
-const loginForm = document.querySelector('[data-auth-form="login"]');
-const signupForm = document.querySelector('[data-auth-form="signup"]');
-const forgotPasswordForm = document.querySelector('[data-auth-form="forgot-password"]');
-const resetPasswordForm = document.querySelector('[data-auth-form="reset-password"]');
-const continueToResetWrapper = document.querySelector(".switch-to-reset-wrapper");
-
-const switchToSignupLinks = document.querySelectorAll(".switch-to-signup");
-const switchToLoginLinks = document.querySelectorAll(".switch-to-login");
-const switchToResetLinks = document.querySelectorAll(".switch-to-reset");
-const forgotPasswordLink = document.querySelector(".forgot-password-link");
-const passwordToggleButtons = document.querySelectorAll(".password-toggle-btn");
-const googleButtons = document.querySelectorAll(".google-btn");
-const logoutButton = document.querySelector(".logout-btn");
-const changePasswordForm = document.querySelector(".change-password-form");
 
 // --- Session ---------------------------------------------------------------
 // Checked immediately, before anything else renders, so a returning logged-in
@@ -104,18 +52,37 @@ const changePasswordForm = document.querySelector(".change-password-form");
 document.body.dataset.session = storage.loadSession() ? "loggedIn" : "loggedOut";
 
 // --- App state -------------------------------------------------------------
-// The app's notes live in this one array for as long as the page is open.
-// Every change (create, edit, delete, archive) updates this array first,
-// then asks storage.js to persist it.
+// The app's shared state lives in this one object for as long as the page
+// is open. It's a plain object (not a class) passed by reference to every
+// events/ module, so mutating a property here (state.selectedNoteId = ...)
+// is visible everywhere else immediately — the simplest way to share
+// mutable state across modules without a framework.
 
-let notes = storage.loadNotes();
+const state = {
+  notes: storage.loadNotes(),
+  showingArchived: false,
+  activeTag: null,
+  searchQuery: "",
+  selectedNoteId: null,
+  // The note behind "Create New Note", while it's still unsaved. It is
+  // deliberately NOT a member of state.notes — a note only becomes part
+  // of that array (and only then appears in the list or gets persisted)
+  // once the user actually clicks Save. Null when there is no draft.
+  draftNote: null,
+};
 
-if (notes === null) {
+if (state.notes === null) {
   // First time the app has ever run in this browser: start with sample
   // notes instead of an empty list, and save them right away.
-  notes = noteManager.getSampleNotes();
-  storage.saveNotes(notes);
+  state.notes = noteManager.getSampleNotes();
+  storage.saveNotes(state.notes);
+} else {
+  // Notes loaded from storage are plain JSON objects, not Note instances —
+  // rebuild them so note.addTag()/archive()/restore() work correctly.
+  state.notes = state.notes.map(noteManager.reviveNote);
 }
+
+state.selectedNoteId = state.notes.length > 0 ? state.notes[0].id : null;
 
 // Apply the saved color/font theme immediately (defaulting to light +
 // sans-serif for a first-time visitor), and check the matching radio
@@ -131,53 +98,33 @@ fontThemeRadios.forEach((radio) => {
   radio.checked = radio.value === preferences.font;
 });
 
-// Whether the notes list is currently showing archived notes instead of
-// active ones. The sidebar/bottom-nav "All Notes" and "Archived Notes"
-// links just flip this and re-render.
-let showingArchived = false;
-
-// The tag currently being filtered by, or null if no tag filter is active.
-let activeTag = null;
-
-// The current search box text. An empty string means "not searching".
-let searchQuery = "";
-
-// Which note is currently shown in the detail panel. Starts as the first
-// visible note, or null if there are no notes at all.
-let selectedNoteId = notes.length > 0 ? notes[0].id : null;
-
-// Tracks a note that was just created by clicking "+ Create New Note" but
-// has not been saved yet. If the user cancels or navigates away without
-// saving, this note is removed instead of being kept as an empty note.
-let unsavedNewNoteId = null;
-
-// Holds the function to run if the user confirms the currently open
-// confirmation modal (delete, archive, ...). Null when no modal is open.
-let pendingConfirmAction = null;
-
 // If the user was mid-edit when they left or reloaded the page, sessionStorage
 // has a draft of what they were typing. Restore it now, before the first
 // render, so the app opens exactly where they left off.
 const savedDraft = storage.loadDraft();
 
 if (savedDraft !== null) {
-  const draftNoteExists = notes.some((note) => note.id === savedDraft.noteId);
+  const draftNoteExists = state.notes.some((note) => note.id === savedDraft.noteId);
 
   if (draftNoteExists) {
-    selectedNoteId = savedDraft.noteId;
+    state.selectedNoteId = savedDraft.noteId;
   } else {
     // The draft belonged to a note that was never saved (the page was
-    // reloaded before clicking Save on a brand new note). Re-create it.
-    const restoredNote = noteManager.createNote(notes, "", "", []);
-    unsavedNewNoteId = restoredNote.id;
-    selectedNoteId = restoredNote.id;
+    // reloaded before clicking Save on a brand new note). Re-create it
+    // as a fresh draft — noteEvents.js refills its *text* from savedDraft
+    // once the form exists (see restoreDraftIntoForm).
+    state.draftNote = noteManager.createDraftNote();
+    state.selectedNoteId = state.draftNote.id;
   }
 }
 
-// --- Rendering helpers -------------------------------------------------
+// --- Rendering ---------------------------------------------------------
 
 function getSelectedNote() {
-  return notes.find((note) => note.id === selectedNoteId) || null;
+  if (state.draftNote !== null && state.draftNote.id === state.selectedNoteId) {
+    return state.draftNote;
+  }
+  return state.notes.find((note) => note.id === state.selectedNoteId) || null;
 }
 
 // Only the notes matching the current view should appear in the list.
@@ -185,35 +132,58 @@ function getSelectedNote() {
 // takes over from the "All Notes" / "Archived Notes" / tag filter views,
 // matching the design: a search is its own view, not layered on top.
 function getVisibleNotes() {
-  if (searchQuery !== "") {
-    return noteManager.searchNotes(notes, searchQuery);
+  if (state.searchQuery !== "") {
+    return noteManager.searchNotes(state.notes, state.searchQuery);
   }
 
-  const notesInCurrentView = notes.filter((note) => note.archived === showingArchived);
-  if (activeTag === null) {
+  const notesInCurrentView = state.notes.filter((note) => note.archived === state.showingArchived);
+  if (state.activeTag === null) {
     return notesInCurrentView;
   }
-  return noteManager.filterByTag(notesInCurrentView, activeTag);
+  return noteManager.filterByTag(notesInCurrentView, state.activeTag);
 }
 
 function getPanelTitle() {
-  if (searchQuery !== "") {
-    return `Showing results for: ${searchQuery}`;
+  if (state.searchQuery !== "") {
+    return `Showing results for: ${state.searchQuery}`;
   }
-  if (activeTag !== null) {
-    return `Notes Tagged: ${activeTag}`;
+  if (state.activeTag !== null) {
+    return `Notes Tagged: ${state.activeTag}`;
   }
-  return showingArchived ? "Archived Notes" : "All Notes";
+  return state.showingArchived ? "Archived Notes" : "All Notes";
 }
 
 function getEmptyMessage() {
-  if (searchQuery !== "") {
+  if (state.searchQuery !== "") {
     return "No notes match your search. Try a different keyword or create a new note.";
   }
-  if (showingArchived) {
+  if (state.showingArchived) {
     return "No notes have been archived yet. Move notes here for safekeeping, or create a new note.";
   }
   return "You don't have any notes yet. Start a new note to capture your thoughts and ideas.";
+}
+
+function isTitleValid() {
+  return isRequired(titleInput.value);
+}
+
+function updateSaveButtonState() {
+  const disabled = !isTitleValid();
+  submitButtons.forEach((button) => {
+    button.disabled = disabled;
+  });
+}
+
+// Renders the subtitle text under the panel title on mobile list views.
+function renderPanelSubtitle() {
+  const subtitle = document.querySelector(".panel-subtitle");
+  if (!subtitle) return;
+  if (state.showingArchived && state.activeTag === null && state.searchQuery === "") {
+    subtitle.textContent = "All your archived notes are stored here. You can restore or delete them anytime.";
+    subtitle.hidden = false;
+  } else {
+    subtitle.hidden = true;
+  }
 }
 
 function renderApp() {
@@ -224,17 +194,17 @@ function renderApp() {
   // whether focus was in the list first, then restore it afterwards.
   const focusWasInNotesList = notesList.contains(document.activeElement);
 
-  ui.setPanelTitle(getPanelTitle());
+  renderNotes.setPanelTitle(getPanelTitle());
   // A search or tag filter is a view of its own, so neither "All Notes"
   // nor "Archived Notes" should show as active in the nav while applied.
-  if (searchQuery === "" && activeTag === null) {
-    ui.setActiveNav(showingArchived ? "archived" : "all");
+  if (state.searchQuery === "" && state.activeTag === null) {
+    renderNotes.setActiveNav(state.showingArchived ? "archived" : "all");
   } else {
-    ui.setActiveNav(null);
+    renderNotes.setActiveNav(null);
   }
-  ui.renderAllNotes(visibleNotes, selectedNoteId, getEmptyMessage());
-  ui.renderNoteDetail(getSelectedNote());
-  ui.renderTagList(noteManager.getUniqueTags(notes), activeTag);
+  renderNotes.renderAllNotes(visibleNotes, state.selectedNoteId, getEmptyMessage());
+  renderDetail.renderNoteDetail(getSelectedNote());
+  renderTags.renderTagList(noteManager.getUniqueTags(state.notes), state.activeTag);
   updateSaveButtonState();
   renderPanelSubtitle();
 
@@ -250,369 +220,57 @@ function showNotesView() {
   document.body.dataset.appView = "notes";
   document.body.dataset.mobileView = "list";
   delete document.body.dataset.mobileSettingsView;
-  // Update panel subtitle for archived / tag views
   renderPanelSubtitle();
 }
 
 function showSettingsView() {
-  document.body.dataset.appView = "settings";
-  delete document.body.dataset.mobileSettingsView;
-}
-
-// Show a mobile settings sub-panel by cloning the matching fieldset into
-// the mobile sub-panel container and re-wiring the apply buttons.
-function showMobileSettingsSubPanel(sectionKey) {
-  // Clone the relevant settings fieldset
-  const source = document.querySelector(`.settings-section[data-settings-panel="${sectionKey}"]`);
-  if (!source) return;
-
-  mobileSettingsSubContent.innerHTML = "";
-
-  // Add a heading that mirrors the fieldset legend
-  const title = document.createElement("h1");
-  title.className = "panel-title";
-  title.textContent = source.querySelector("legend").textContent;
-  mobileSettingsSubContent.appendChild(title);
-
-  // Clone the hint + options/form (everything after the legend)
-  Array.from(source.children).forEach((child) => {
-    if (child.tagName !== "LEGEND") {
-      mobileSettingsSubContent.appendChild(child.cloneNode(true));
-    }
-  });
-
-  // Re-wire radio inputs so they actually check — clones lose event state
-  mobileSettingsSubContent.querySelectorAll('input[name="color-theme"]').forEach((radio) => {
-    const currentTheme = document.documentElement.dataset.theme || "light";
-    radio.checked = radio.value === currentTheme;
-    radio.addEventListener("change", () => {
-      document.querySelectorAll('input[name="color-theme"]').forEach((r) => {
-        r.checked = r.value === radio.value;
-      });
-    });
-  });
-  mobileSettingsSubContent.querySelectorAll('input[name="font-theme"]').forEach((radio) => {
-    const currentFont = document.documentElement.dataset.font || "sans-serif";
-    radio.checked = radio.value === currentFont;
-    radio.addEventListener("change", () => {
-      document.querySelectorAll('input[name="font-theme"]').forEach((r) => {
-        r.checked = r.value === radio.value;
-      });
-    });
-  });
-
-  // Wire apply buttons in the cloned content
-  const applyCloneTheme = mobileSettingsSubContent.querySelector(".apply-theme-btn");
-  if (applyCloneTheme) applyCloneTheme.addEventListener("click", applySelectedTheme);
-
-  const applyCloneFont = mobileSettingsSubContent.querySelector(".apply-font-btn");
-  if (applyCloneFont) applyCloneFont.addEventListener("click", applySelectedFont);
-
-  // Wire password form submit in the cloned content
-  const clonedPasswordForm = mobileSettingsSubContent.querySelector(".change-password-form");
-  if (clonedPasswordForm) {
-    // Wire password toggles
-    clonedPasswordForm.querySelectorAll(".password-toggle-btn").forEach((btn) => {
-      btn.addEventListener("click", () => ui.togglePasswordVisibility(btn));
-    });
-    clonedPasswordForm.addEventListener("submit", (event) => {
-      event.preventDefault();
-      submitChangePasswordForm(clonedPasswordForm);
-    });
-  }
-
-  document.body.dataset.appView = "settings";
-  document.body.dataset.mobileSettingsView = "sub";
-}
-
-// Renders the subtitle text under the panel title on mobile list views.
-function renderPanelSubtitle() {
-  const subtitle = document.querySelector(".panel-subtitle");
-  if (!subtitle) return;
-  if (showingArchived && activeTag === null && searchQuery === "") {
-    subtitle.textContent = "All your archived notes are stored here. You can restore or delete them anytime.";
-    subtitle.hidden = false;
-  } else {
-    subtitle.hidden = true;
-  }
-}
-
-// Mobile search page — renders live results into the mobile search results list.
-function handleMobileSearchInput() {
-  const query = mobileSearchInput.value.trim();
-  searchQuery = query;
-  mobileSearchResultsList.innerHTML = "";
-
-  if (query === "") {
-    mobileSearchSubtitle.textContent = "";
-    return;
-  }
-
-  const results = noteManager.searchNotes(notes, query);
-  mobileSearchSubtitle.textContent = results.length > 0
-    ? `All notes matching "${query}" are displayed below.`
-    : `No notes found for "${query}".`;
-
-  if (results.length === 0) return;
-
-  results.forEach((note) => {
-    mobileSearchResultsList.appendChild(ui.createNoteCard(note, selectedNoteId));
-  });
-}
-
-// Selecting a note from either mobile list works the same way as the
-// desktop notes list: load it into the detail form and switch views.
-function openNoteFromMobileList(noteId) {
-  selectedNoteId = noteId;
-  renderApp();
-  document.body.dataset.mobileView = "detail";
-}
-
-// Renders the mobile Tags list page.
-function renderMobileTagsList() {
-  const tags = noteManager.getUniqueTags(notes);
-  mobileTagsList.innerHTML = "";
-
-  if (tags.length === 0) {
-    const li = document.createElement("li");
-    li.className = "empty-state";
-    li.textContent = "No tags yet. Add tags to your notes to see them here.";
-    mobileTagsList.appendChild(li);
-    return;
-  }
-
-  tags.forEach((tag) => {
-    const li = document.createElement("li");
-    const btn = document.createElement("button");
-    btn.className = "mobile-tag-list-item";
-    btn.dataset.tag = tag;
-
-    const span = document.createElement("span");
-    span.textContent = tag;
-
-    btn.append(ui.createTagIcon(), span);
-    li.appendChild(btn);
-    mobileTagsList.appendChild(li);
-  });
-}
-
-// Shows the mobile tag detail panel for the given tag.
-function showMobileTagDetail(tag) {
-  activeTag = tag;
-  showingArchived = false;
-  const tagged = noteManager.filterByTag(notes.filter((n) => !n.archived), tag);
-  mobileTagDetailTitle.textContent = tag;
-  mobileTagDetailSubtitle.textContent = `All notes with the "${tag}" tag are shown here.`;
-  mobileTagDetailList.innerHTML = "";
-  tagged.forEach((note) => {
-    mobileTagDetailList.appendChild(ui.createNoteCard(note, selectedNoteId));
-  });
-  // Update nav active state to tags
-  ui.setActiveNav("tags");
-  document.body.dataset.mobileView = "tag-detail";
-}
-
-// --- Theme & font settings -------------------------------------------------
-
-function getCheckedRadioValue(radios) {
-  const checkedRadio = Array.from(radios).find((radio) => radio.checked);
-  return checkedRadio ? checkedRadio.value : null;
-}
-
-function applySelectedTheme() {
-  const theme = getCheckedRadioValue(colorThemeRadios);
-  if (!theme) return;
-
-  themes.applyTheme(theme);
-  storage.savePreferences({ theme, font: getCheckedRadioValue(fontThemeRadios) });
-  ui.showToast("Settings updated successfully!");
-}
-
-function applySelectedFont() {
-  const font = getCheckedRadioValue(fontThemeRadios);
-  if (!font) return;
-
-  themes.applyFont(font);
-  storage.savePreferences({ theme: getCheckedRadioValue(colorThemeRadios), font });
-  ui.showToast("Settings updated successfully!");
-}
-
-// Clears the search box itself (not just the searchQuery state) so the
-// three nav actions below always leave the app in a consistent state.
-function clearSearch() {
-  searchQuery = "";
-  searchInput.value = "";
-}
-
-function showAllNotes() {
-  clearSearch();
-  showingArchived = false;
-  activeTag = null;
-  const visibleNotes = getVisibleNotes();
-  selectedNoteId = visibleNotes.length > 0 ? visibleNotes[0].id : null;
-  renderApp();
-  showNotesView();
-}
-
-function showArchivedNotes() {
-  clearSearch();
-  showingArchived = true;
-  activeTag = null;
-  const visibleNotes = getVisibleNotes();
-  selectedNoteId = visibleNotes.length > 0 ? visibleNotes[0].id : null;
-  renderApp();
-  // Show the archived panel on mobile — same as list view but shows archived notes
-  document.body.dataset.appView = "notes";
-  document.body.dataset.mobileView = "list";
-  delete document.body.dataset.mobileSettingsView;
-  renderPanelSubtitle();
-}
-
-function showTagFilter(tag) {
-  clearSearch();
-  showingArchived = false;
-  activeTag = tag;
-  const visibleNotes = getVisibleNotes();
-  selectedNoteId = visibleNotes.length > 0 ? visibleNotes[0].id : null;
-  renderApp();
-  showNotesView();
-}
-
-function handleSearchInput() {
-  searchQuery = searchInput.value.trim();
-  const visibleNotes = getVisibleNotes();
-  selectedNoteId = visibleNotes.length > 0 ? visibleNotes[0].id : null;
-  renderApp();
-}
-
-function showMobileSearch() {
-  // Reset mobile search state
-  searchQuery = "";
-  mobileSearchInput.value = "";
-  mobileSearchSubtitle.textContent = "";
-  mobileSearchResultsList.innerHTML = "";
-  // Switch to mobile search view
-  document.body.dataset.appView = "notes";
-  document.body.dataset.mobileView = "search";
-  delete document.body.dataset.mobileSettingsView;
-  ui.setActiveNav("search");
-  mobileSearchInput.focus();
-}
-
-// --- Create / save / cancel note ----------------------------------------
-
-function discardUnsavedNewNote() {
-  if (unsavedNewNoteId === null) return;
-
-  noteManager.deleteNote(notes, unsavedNewNoteId);
-  if (selectedNoteId === unsavedNewNoteId) {
-    const visibleNotes = getVisibleNotes();
-    selectedNoteId = visibleNotes.length > 0 ? visibleNotes[0].id : null;
-  }
-  unsavedNewNoteId = null;
-}
-
-function createNewNote() {
+  // Leaving the note editor for Settings without saving should discard an
+  // unsaved new note, the same as every other way of navigating away from it.
   discardUnsavedNewNote();
-  showingArchived = false; // a brand new note is never archived, so show the All Notes view
+  document.body.dataset.appView = "settings";
+  delete document.body.dataset.mobileSettingsView;
+  renderNotes.setActiveNav("settings"); // highlights the mobile bottom nav's Settings icon
+}
 
-  const note = noteManager.createNote(notes, "", "", []);
-  unsavedNewNoteId = note.id;
-  selectedNoteId = note.id;
+// Sets selectedNoteId to the first note in the current visible list, or null if empty.
+function selectFirstVisibleNote() {
+  const visibleNotes = getVisibleNotes();
+  state.selectedNoteId = visibleNotes.length > 0 ? visibleNotes[0].id : null;
+}
 
+// Selects a note by ID, discards any unsaved draft, re-renders the app, and switches mobile view to detail.
+function selectNoteAndOpenDetail(noteId) {
+  discardUnsavedNewNote();
+  state.selectedNoteId = noteId;
   renderApp();
   document.body.dataset.mobileView = "detail";
-  titleInput.focus();
 }
 
-// --- Validation ----------------------------------------------------------
-// The only required field is the title. Validation runs on blur (so the
-// user sees the error as soon as they leave the field) and again on
-// submit (so it can never be skipped).
+// Tracks a note that was just created by clicking "+ Create New Note" but
+// has not been saved yet. If the user cancels or navigates away without
+// saving, this note is removed instead of being kept as an empty note.
+// Drops the in-progress "Create New Note" draft, if there is one. Since
+// the draft was never added to state.notes, there is nothing to remove
+// from it — just clear the reference and, if it was the selected note,
+// fall back to whatever is now first in the current view.
+function discardUnsavedNewNote() {
+  if (state.draftNote === null) return;
 
-function isTitleValid() {
-  return titleInput.value.trim().length > 0;
-}
-
-function validateTitle() {
-  if (isTitleValid()) {
-    ui.clearValidationError();
-    return true;
+  if (state.selectedNoteId === state.draftNote.id) {
+    selectFirstVisibleNote();
   }
-  ui.showValidationError("Title is required.");
-  return false;
+  state.draftNote = null;
 }
 
-function updateSaveButtonState() {
-  const disabled = !isTitleValid();
-  submitButtons.forEach((button) => {
-    button.disabled = disabled;
-  });
-}
+// --- Confirmation modal ----------------------------------------------------
+// One modal element in the HTML is reused for every confirmation (delete,
+// archive, ...) instead of building a separate modal per action. Whichever
+// events/ module opens it decides what happens if confirmed; this is just
+// the shared open/close mechanism.
 
-// While the user is typing, clear the error as soon as it becomes valid
-// again, instead of making them wait until they blur the field.
-function handleTitleInput() {
-  updateSaveButtonState();
-  if (isTitleValid()) {
-    ui.clearValidationError();
-  }
-}
-
-// --- Drafts (sessionStorage) ---------------------------------------------
-// Saved on every keystroke so a reload or accidental tab close doesn't
-// lose unsaved edits. Cleared once the note is actually saved or the edit
-// is cancelled, since at that point there is nothing left to restore.
-
-function saveDraftFromForm() {
-  storage.saveDraft({
-    noteId: selectedNoteId,
-    title: titleInput.value,
-    tags: tagsInput.value,
-    content: contentInput.value,
-  });
-}
-
-function saveSelectedNote() {
-  if (!validateTitle()) {
-    titleInput.focus();
-    return;
-  }
-
-  const note = getSelectedNote();
-  if (!note) return;
-
-  noteManager.updateNote(notes, note.id, {
-    title: titleInput.value,
-    content: contentInput.value,
-    tags: ui.parseTagsInput(tagsInput.value),
-  });
-
-  unsavedNewNoteId = null;
-  storage.saveNotes(notes);
-  storage.clearDraft();
-  renderApp();
-  ui.showToast("Note saved successfully!");
-}
-
-function cancelEditingSelectedNote() {
-  const wasUnsavedNewNote = selectedNoteId === unsavedNewNoteId;
-  if (wasUnsavedNewNote) {
-    discardUnsavedNewNote();
-  }
-
-  storage.clearDraft();
-  renderApp(); // re-fill the form from the saved note, discarding any typed edits
-
-  // A cancelled new note leaves nothing to show in its place, so return to
-  // the list (on mobile, staying on the detail view here would strand the
-  // user: it has no back button of its own outside of "Go Back").
-  if (wasUnsavedNewNote) {
-    showNotesView();
-  }
-}
-
-// --- Delete note -----------------------------------------------------------
+// Holds the function to run if the user confirms the currently open
+// confirmation modal. Null when no modal is open.
+let pendingConfirmAction = null;
 
 // Remembers whatever had focus before a modal opened, so closing it
 // (however the user does that) returns focus there instead of losing it.
@@ -621,474 +279,18 @@ let lastFocusedElementBeforeModal = null;
 function openConfirmModal(action, modalOptions) {
   lastFocusedElementBeforeModal = document.activeElement;
   pendingConfirmAction = action;
-  ui.showModal(modalOptions);
+  feedback.showModal(modalOptions);
 }
 
 function closeConfirmationModal() {
   pendingConfirmAction = null;
-  ui.hideModal();
+  feedback.hideModal();
 
   if (lastFocusedElementBeforeModal) {
     lastFocusedElementBeforeModal.focus();
     lastFocusedElementBeforeModal = null;
   }
 }
-
-function deleteSelectedNote() {
-  if (!selectedNoteId) return;
-
-  noteManager.deleteNote(notes, selectedNoteId);
-  const visibleNotes = getVisibleNotes();
-  selectedNoteId = visibleNotes.length > 0 ? visibleNotes[0].id : null;
-  storage.saveNotes(notes);
-
-  renderApp();
-  showNotesView(); // go back to the list view, since the deleted note's detail is gone
-  ui.showToast("Note permanently deleted.");
-}
-
-function openDeleteConfirmation() {
-  const note = getSelectedNote();
-  if (!note) return;
-
-  openConfirmModal(deleteSelectedNote, {
-    title: "Delete Note",
-    message: "Are you sure you want to permanently delete this note? This action cannot be undone.",
-    confirmLabel: "Delete Note",
-    isDangerous: true,
-    icon: TRASH_ICON_PATHS,
-  });
-}
-
-// --- Archive / restore note ------------------------------------------------
-// Archiving asks for confirmation (it moves the note out of the main list);
-// restoring is a quick, reversible action, so it happens immediately.
-
-function archiveSelectedNote() {
-  if (!selectedNoteId) return;
-
-  noteManager.updateArchivedStatus(notes, selectedNoteId, true);
-  const visibleNotes = getVisibleNotes();
-  selectedNoteId = visibleNotes.length > 0 ? visibleNotes[0].id : null;
-  storage.saveNotes(notes);
-
-  renderApp();
-  showNotesView();
-  ui.showToast("Note archived.", { label: "Archived Notes", onClick: showArchivedNotes });
-}
-
-function restoreSelectedNote() {
-  if (!selectedNoteId) return;
-
-  noteManager.updateArchivedStatus(notes, selectedNoteId, false);
-  const visibleNotes = getVisibleNotes();
-  selectedNoteId = visibleNotes.length > 0 ? visibleNotes[0].id : null;
-  storage.saveNotes(notes);
-
-  renderApp();
-  ui.showToast("Note restored to active notes.", { label: "All Notes", onClick: showAllNotes });
-}
-
-function handleArchiveButtonClick() {
-  const note = getSelectedNote();
-  if (!note) return;
-
-  if (note.archived) {
-    restoreSelectedNote();
-    return;
-  }
-
-  openConfirmModal(archiveSelectedNote, {
-    title: "Archive Note",
-    message: "Are you sure you want to archive this note? You can find it in the Archived Notes section and restore it anytime.",
-    confirmLabel: "Archive Note",
-    isDangerous: false,
-    icon: ARCHIVE_ICON_PATHS,
-  });
-}
-
-// --- Geolocation (bonus) ---------------------------------------------------
-// Adding a location is reversible and low-risk, so it needs no confirmation
-// modal — just the browser's own native permission prompt.
-
-function handleLocationSuccess(position) {
-  const note = getSelectedNote();
-  if (!note) return;
-
-  note.location = {
-    latitude: position.coords.latitude,
-    longitude: position.coords.longitude,
-  };
-  storage.saveNotes(notes);
-  renderApp();
-  ui.showToast("Location added!");
-}
-
-function handleLocationError(error) {
-  if (error.code === error.PERMISSION_DENIED) {
-    ui.showToast("Location permission was denied.");
-  } else {
-    ui.showToast("Could not get your location.");
-  }
-}
-
-function handleLocationButtonClick() {
-  const note = getSelectedNote();
-  if (!note) return;
-
-  if (note.location !== null) {
-    note.location = null;
-    storage.saveNotes(notes);
-    renderApp();
-    return;
-  }
-
-  if (!("geolocation" in navigator)) {
-    ui.showToast("Geolocation is not supported in this browser.");
-    return;
-  }
-
-  navigator.geolocation.getCurrentPosition(handleLocationSuccess, handleLocationError);
-}
-
-// --- Auth (simulated, client-side only — see auth.js) -----------------
-
-// A simple, readable check: something, then "@", then something, then a
-// "." then something — not full RFC 5322 compliance, just enough to catch
-// obvious typos like a missing "@" or a missing dot before the domain.
-// The browser's native checkValidity() for type="email" turned out to be
-// too permissive for this (it accepts "email@examplecom", no dot needed).
-const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-// Shared by every auth form's email field: required, then a format check.
-function isEmailFieldValid(form) {
-  const emailInput = form.querySelector('[data-field="email"]');
-  const email = emailInput.value.trim();
-
-  if (email === "") {
-    ui.showFieldError(form, "email", "Email is required.");
-    return false;
-  }
-  if (!EMAIL_PATTERN.test(email)) {
-    ui.showFieldError(form, "email", "Please enter a valid email address.");
-    return false;
-  }
-
-  ui.clearFieldError(form, "email");
-  return true;
-}
-
-function handleLoginSubmit(event) {
-  event.preventDefault();
-  ui.clearAllFieldErrors(loginForm);
-  ui.showFormError(loginForm, "");
-
-  const email = loginForm.querySelector('[data-field="email"]').value.trim();
-  const password = loginForm.querySelector('[data-field="password"]').value;
-
-  let isValid = isEmailFieldValid(loginForm);
-  if (!password) {
-    ui.showFieldError(loginForm, "password", "Password is required.");
-    isValid = false;
-  }
-  if (!isValid) return;
-
-  const account = storage.loadAccount();
-  if (!auth.isLoginValid(account, email, password)) {
-    ui.showFormError(loginForm, "Invalid email or password.");
-    return;
-  }
-
-  storage.saveSession({ email });
-  document.body.dataset.session = "loggedIn";
-  ui.resetAuthForm(loginForm);
-  ui.showToast("Welcome back!");
-}
-
-function handleSignupSubmit(event) {
-  event.preventDefault();
-  ui.clearAllFieldErrors(signupForm);
-  ui.showFormError(signupForm, "");
-
-  const email = signupForm.querySelector('[data-field="email"]').value.trim();
-  const password = signupForm.querySelector('[data-field="password"]').value;
-
-  let isValid = isEmailFieldValid(signupForm);
-  if (!auth.isPasswordValid(password)) {
-    ui.showFieldError(signupForm, "password", `Password must be at least ${auth.MINIMUM_PASSWORD_LENGTH} characters.`);
-    isValid = false;
-  }
-  if (!isValid) return;
-
-  // This demo supports exactly one account, so signing up again simply
-  // replaces whatever account existed before.
-  storage.saveAccount(auth.createAccount(email, password));
-  storage.saveSession({ email });
-  document.body.dataset.session = "loggedIn";
-  ui.resetAuthForm(signupForm);
-  ui.showToast("Account created!");
-}
-
-function handleForgotPasswordSubmit(event) {
-  event.preventDefault();
-  ui.clearAllFieldErrors(forgotPasswordForm);
-  ui.showFormError(forgotPasswordForm, "");
-
-  if (!isEmailFieldValid(forgotPasswordForm)) return;
-
-  const email = forgotPasswordForm.querySelector('[data-field="email"]').value.trim();
-  const account = storage.loadAccount();
-  if (!account || account.email !== email) {
-    ui.showFormError(forgotPasswordForm, "No account found with that email.");
-    return;
-  }
-
-  // There's no real email to send, so this reveals a link that simulates
-  // clicking the one that would have arrived in a real inbox.
-  continueToResetWrapper.hidden = false;
-}
-
-function handleResetPasswordSubmit(event) {
-  event.preventDefault();
-  ui.clearAllFieldErrors(resetPasswordForm);
-  ui.showFormError(resetPasswordForm, "");
-
-  const password = resetPasswordForm.querySelector('[data-field="password"]').value;
-  const confirmPassword = resetPasswordForm.querySelector('[data-field="confirm-password"]').value;
-
-  let isValid = true;
-  if (!auth.isPasswordValid(password)) {
-    ui.showFieldError(resetPasswordForm, "password", `Password must be at least ${auth.MINIMUM_PASSWORD_LENGTH} characters.`);
-    isValid = false;
-  }
-  if (confirmPassword !== password) {
-    ui.showFieldError(resetPasswordForm, "confirm-password", "Passwords do not match.");
-    isValid = false;
-  }
-  if (!isValid) return;
-
-  const account = storage.loadAccount();
-  account.password = password;
-  storage.saveAccount(account);
-
-  ui.resetAuthForm(resetPasswordForm);
-  continueToResetWrapper.hidden = true;
-  ui.showAuthScreen("login");
-  ui.showToast("Password reset! Please log in.");
-}
-
-function handleLogout() {
-  storage.clearSession();
-  document.body.dataset.session = "loggedOut";
-  ui.showAuthScreen("login");
-  showNotesView();
-}
-
-// Takes the form as a parameter (instead of assuming a specific one) so
-// both the real desktop form and its cloned mobile copy (built by
-// showMobileSettingsSubPanel) can share this exact same validation.
-function submitChangePasswordForm(form) {
-  ui.clearAllFieldErrors(form);
-  ui.showFormError(form, "");
-
-  const oldPassword = form.querySelector('[data-field="old-password"]').value;
-  const newPassword = form.querySelector('[data-field="new-password"]').value;
-  const confirmPassword = form.querySelector('[data-field="confirm-new-password"]').value;
-  const account = storage.loadAccount();
-
-  let isValid = true;
-  if (!account || account.password !== oldPassword) {
-    ui.showFieldError(form, "old-password", "Old password is incorrect.");
-    isValid = false;
-  }
-  if (!auth.isPasswordValid(newPassword)) {
-    ui.showFieldError(form, "new-password", `Password must be at least ${auth.MINIMUM_PASSWORD_LENGTH} characters.`);
-    isValid = false;
-  }
-  if (confirmPassword !== newPassword) {
-    ui.showFieldError(form, "confirm-new-password", "Passwords do not match.");
-    isValid = false;
-  }
-  if (!isValid) return;
-
-  account.password = newPassword;
-  storage.saveAccount(account);
-  ui.resetAuthForm(form);
-  ui.showToast("Password changed successfully!");
-}
-
-function handleChangePasswordSubmit(event) {
-  event.preventDefault();
-  submitChangePasswordForm(changePasswordForm);
-}
-
-// --- Initial render ------------------------------------------------------
-
-renderApp();
-
-// renderApp() just filled the form from the saved note, which overwrites
-// any draft text with the note's real content. If there was a draft,
-// re-apply its (unsaved) text on top now that the form exists.
-if (savedDraft !== null) {
-  titleInput.value = savedDraft.title;
-  tagsInput.value = savedDraft.tags;
-  contentInput.value = savedDraft.content;
-  updateSaveButtonState();
-}
-
-// --- Event listeners -------------------------------------------------------
-
-// Event delegation: one listener on the <ul> handles clicks on any note
-// card, instead of attaching a separate listener to each <li>. This is the
-// same pattern the assignment requires later for edit/delete/archive
-// buttons, so it's worth using correctly from the start.
-notesList.addEventListener("click", (event) => {
-  const clickedCard = event.target.closest(".note-card");
-  if (!clickedCard) return;
-
-  const clickedNoteId = clickedCard.dataset.noteId;
-  if (clickedNoteId !== unsavedNewNoteId) {
-    discardUnsavedNewNote();
-  }
-
-  selectedNoteId = clickedNoteId;
-  renderApp();
-  document.body.dataset.mobileView = "detail";
-});
-
-backButton.addEventListener("click", () => {
-  // Go back to the view the user came from
-  if (showingArchived) {
-    document.body.dataset.mobileView = "list";
-  } else if (activeTag !== null) {
-    document.body.dataset.mobileView = "tag-detail";
-  } else if (searchQuery !== "") {
-    document.body.dataset.mobileView = "search";
-  } else {
-    document.body.dataset.mobileView = "list";
-  }
-});
-
-// Same event delegation pattern as the notes list: one listener on the
-// <ul> handles clicks on any tag link, however many tags there are.
-tagList.addEventListener("click", (event) => {
-  const clickedLink = event.target.closest(".tag-link");
-  if (!clickedLink) return;
-
-  event.preventDefault();
-  showTagFilter(clickedLink.dataset.tag);
-});
-
-searchForm.addEventListener("submit", (event) => {
-  event.preventDefault(); // search happens live as you type; Enter shouldn't reload the page
-});
-
-searchInput.addEventListener("input", handleSearchInput);
-
-mobileSearchButton.addEventListener("click", (event) => {
-  event.preventDefault();
-  showMobileSearch();
-});
-
-// Mobile search input — live results
-mobileSearchInput.addEventListener("input", handleMobileSearchInput);
-
-// Mobile tags nav button
-mobileTagsButton.addEventListener("click", (event) => {
-  event.preventDefault();
-  renderMobileTagsList();
-  document.body.dataset.appView = "notes";
-  document.body.dataset.mobileView = "tags";
-  delete document.body.dataset.mobileSettingsView;
-  ui.setActiveNav("tags");
-});
-
-// Mobile tags list — click a tag to see its notes
-mobileTagsList.addEventListener("click", (event) => {
-  const btn = event.target.closest(".mobile-tag-list-item");
-  if (!btn) return;
-  showMobileTagDetail(btn.dataset.tag);
-});
-
-// Same event delegation pattern as the desktop notes list: one listener
-// on each <ul> handles clicks on any note card it currently contains,
-// instead of attaching a listener to every card as it's created.
-mobileSearchResultsList.addEventListener("click", (event) => {
-  const clickedCard = event.target.closest(".note-card");
-  if (!clickedCard) return;
-  openNoteFromMobileList(clickedCard.dataset.noteId);
-});
-
-mobileTagDetailList.addEventListener("click", (event) => {
-  const clickedCard = event.target.closest(".note-card");
-  if (!clickedCard) return;
-  openNoteFromMobileList(clickedCard.dataset.noteId);
-});
-
-// Mobile tag detail back button — back to tags list
-mobileTagBackButton.addEventListener("click", () => {
-  activeTag = null;
-  renderMobileTagsList();
-  document.body.dataset.mobileView = "tags";
-  ui.setActiveNav("tags");
-});
-
-// Mobile settings sub-panel back button — back to settings list
-mobileSettingsBackButton.addEventListener("click", () => {
-  delete document.body.dataset.mobileSettingsView;
-  document.body.dataset.appView = "settings";
-});
-
-// Settings nav items — on mobile navigate to sub-panel; on desktop switch section
-settingsNav.addEventListener("click", (event) => {
-  const clickedItem = event.target.closest(".settings-nav-item");
-  if (!clickedItem) return;
-  if (!clickedItem.dataset.settingsSection) return;
-
-  const targetSection = clickedItem.dataset.settingsSection;
-  const isMobile = window.innerWidth < DESKTOP_BREAKPOINT_PX;
-
-  if (isMobile) {
-    showMobileSettingsSubPanel(targetSection);
-  } else {
-    // Desktop: switch visible section
-    settingsNavItems.forEach((item) => {
-      item.classList.toggle("is-active", item === clickedItem);
-    });
-    settingsSections.forEach((section) => {
-      section.hidden = section.dataset.settingsPanel !== targetSection;
-    });
-  }
-});
-
-createNoteButton.addEventListener("click", createNewNote);
-fabButton.addEventListener("click", createNewNote);
-
-noteForm.addEventListener("submit", (event) => {
-  event.preventDefault(); // this is a real <form>, so stop the page from reloading
-  saveSelectedNote();
-});
-
-cancelButtons.forEach((button) => {
-  button.addEventListener("click", cancelEditingSelectedNote);
-});
-
-titleInput.addEventListener("blur", validateTitle);
-titleInput.addEventListener("input", handleTitleInput);
-
-titleInput.addEventListener("input", saveDraftFromForm);
-tagsInput.addEventListener("input", saveDraftFromForm);
-contentInput.addEventListener("input", saveDraftFromForm);
-
-deleteButtons.forEach((button) => {
-  button.addEventListener("click", openDeleteConfirmation);
-});
-
-archiveButtons.forEach((button) => {
-  button.addEventListener("click", handleArchiveButtonClick);
-});
-
-locationButton.addEventListener("click", handleLocationButtonClick);
 
 modalConfirmButton.addEventListener("click", () => {
   if (pendingConfirmAction) {
@@ -1099,8 +301,6 @@ modalConfirmButton.addEventListener("click", () => {
 
 modalCancelButton.addEventListener("click", closeConfirmationModal);
 
-toastCloseButton.addEventListener("click", ui.hideToast);
-
 // Clicking the dimmed backdrop (not the modal box itself) cancels, the
 // same as clicking the Cancel button.
 modalOverlay.addEventListener("click", (event) => {
@@ -1109,125 +309,39 @@ modalOverlay.addEventListener("click", (event) => {
   }
 });
 
-// Escape closes the modal if one is open, otherwise cancels editing if
-// focus is inside the note form — matching the assignment's keyboard
-// requirement for both cases with a single listener.
-document.addEventListener("keydown", (event) => {
-  if (event.key !== "Escape") return;
+toastCloseButton.addEventListener("click", feedback.hideToast);
 
-  if (!modalOverlay.hidden) {
-    closeConfirmationModal();
-    return;
-  }
+// --- Wire up the feature modules --------------------------------------------
+// Each events/ module gets this same "core" object: the shared state, the
+// render function, and the handful of actions more than one feature needs
+// (discarding an unsaved note, switching to the notes/settings view,
+// opening the confirmation modal). navigationEvents.js additionally
+// returns showAllNotes/showArchivedNotes, which get added to core so
+// noteEvents.js's archive/restore toasts can link back to those views.
 
-  if (noteForm.contains(document.activeElement)) {
-    cancelEditingSelectedNote();
-  }
-});
+const core = {
+  state,
+  renderApp,
+  getSelectedNote,
+  getVisibleNotes,
+  selectFirstVisibleNote,
+  selectNoteAndOpenDetail,
+  updateSaveButtonState,
+  discardUnsavedNewNote,
+  showNotesView,
+  showSettingsView,
+  openConfirmModal,
+  closeConfirmationModal,
+};
 
-// While the modal is open, Tab should only cycle between its two buttons
-// instead of moving focus to whatever is behind it.
-modalOverlay.addEventListener("keydown", (event) => {
-  if (event.key !== "Tab") return;
+renderApp();
 
-  const focusableElements = [modalCancelButton, modalConfirmButton];
-  const currentIndex = focusableElements.indexOf(document.activeElement);
+const { showAllNotes, showArchivedNotes } = navigationEvents.init(core);
+core.showAllNotes = showAllNotes;
+core.showArchivedNotes = showArchivedNotes;
 
-  event.preventDefault();
-  let nextIndex;
-  if (event.shiftKey) {
-    nextIndex = currentIndex <= 0 ? focusableElements.length - 1 : currentIndex - 1;
-  } else {
-    nextIndex = currentIndex === focusableElements.length - 1 ? 0 : currentIndex + 1;
-  }
-  focusableElements[nextIndex].focus();
-});
+const { cancelEditingSelectedNote } = noteEvents.init(core, savedDraft);
+keyboardEvents.init(core, { cancelEditingSelectedNote });
 
-// Bonus: Up/Down arrow keys move between note cards, in addition to Tab.
-notesList.addEventListener("keydown", (event) => {
-  if (event.key !== "ArrowDown" && event.key !== "ArrowUp") return;
-
-  const cards = Array.from(notesList.querySelectorAll(".note-card"));
-  const currentIndex = cards.indexOf(document.activeElement);
-  if (currentIndex === -1) return;
-
-  event.preventDefault();
-  const nextIndex = event.key === "ArrowDown" ? currentIndex + 1 : currentIndex - 1;
-  const nextCard = cards[nextIndex];
-  if (nextCard) {
-    nextCard.focus();
-  }
-});
-
-// Settings is a second top-level view. Switching between "notes" and
-// "settings" just changes an attribute on <body>; styles.css decides what
-// to show or hide based on that attribute.
-settingsButton.addEventListener("click", showSettingsView);
-
-settingsNavButton.addEventListener("click", (event) => {
-  event.preventDefault(); // these are <a href="#">, so stop the page jumping to the top
-  showSettingsView();
-});
-
-homeNavButton.addEventListener("click", (event) => {
-  event.preventDefault();
-  showAllNotes();
-});
-
-allNotesLink.addEventListener("click", (event) => {
-  event.preventDefault();
-  showAllNotes();
-});
-
-archivedNotesLinks.forEach((link) => {
-  link.addEventListener("click", (event) => {
-    event.preventDefault();
-    showArchivedNotes();
-  });
-});
-
-// (Settings nav click handler is defined above in the mobile section — handles both mobile sub-panel and desktop tab switching)
-
-applyThemeButton.addEventListener("click", applySelectedTheme);
-applyFontButton.addEventListener("click", applySelectedFont);
-
-// --- Auth event listeners --------------------------------------------------
-
-loginForm.addEventListener("submit", handleLoginSubmit);
-signupForm.addEventListener("submit", handleSignupSubmit);
-forgotPasswordForm.addEventListener("submit", handleForgotPasswordSubmit);
-resetPasswordForm.addEventListener("submit", handleResetPasswordSubmit);
-
-// Validate each form's email field as soon as it's blurred, not just on
-// submit — the same pattern already used for the note title field.
-[loginForm, signupForm, forgotPasswordForm].forEach((form) => {
-  form.querySelector('[data-field="email"]').addEventListener("blur", () => isEmailFieldValid(form));
-});
-
-switchToSignupLinks.forEach((link) => {
-  link.addEventListener("click", () => ui.showAuthScreen("signup"));
-});
-
-switchToLoginLinks.forEach((link) => {
-  link.addEventListener("click", () => ui.showAuthScreen("login"));
-});
-
-switchToResetLinks.forEach((link) => {
-  link.addEventListener("click", () => ui.showAuthScreen("reset-password"));
-});
-
-forgotPasswordLink.addEventListener("click", () => ui.showAuthScreen("forgot-password"));
-
-passwordToggleButtons.forEach((button) => {
-  button.addEventListener("click", () => ui.togglePasswordVisibility(button));
-});
-
-googleButtons.forEach((button) => {
-  button.addEventListener("click", () => {
-    ui.showToast("Google sign-in isn't available in this demo.");
-  });
-});
-
-logoutButton.addEventListener("click", handleLogout);
-
-changePasswordForm.addEventListener("submit", handleChangePasswordSubmit);
+settingsEvents.init();
+authEvents.init(core);

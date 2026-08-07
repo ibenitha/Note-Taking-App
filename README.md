@@ -2,13 +2,17 @@
 
 A single-page note-taking app built for the "DOM & Browser APIs" lab assignment, using only HTML, CSS, and vanilla JavaScript (ES6 modules) — no frameworks, no build step, no dependencies.
 
+This project is a Note-Taking Web Application built using HTML, CSS, and JavaScript (ES6 modules). It is a Single Page Application (SPA), meaning all screens and features are managed within one HTML page without navigating to different pages.
+
+The purpose of the application is to allow users to create, organize, edit, search, archive, and manage notes while demonstrating the concepts required in the assignment, including DOM manipulation, event handling, browser storage APIs, modular JavaScript, accessibility, and responsive design.
+
 ![Desktop, dark mode](screenshots/desktop-dark.png)
 
 ## Project Overview
 
 The app lets a user create, edit, tag, archive, and search notes, with everything persisted in the browser via `localStorage`. It's gated behind a small simulated login (no backend — see [Known limitations](#known-limitations)), and includes light/dark/system color themes, three font themes, unsaved-draft recovery, and optional geolocation tagging.
 
-The focus of the assignment is DOM manipulation, event handling (especially delegation), and browser storage APIs — not visual design — but the UI was built to match a provided Figma spec as closely as possible.
+The focus of the assignment is DOM manipulation, event handling (especially delegation), and browser storage APIs — not visual design — but the UI was built to match a provided Figma spec as closely as possible, and the Figma design is treated as a project requirement in its own right (see [Intentional design decisions](#intentional-design-decisions)).
 
 ## Features
 
@@ -34,19 +38,40 @@ The focus of the assignment is DOM manipulation, event handling (especially dele
 ## Folder Structure
 
 ```
-index.html          Semantic HTML skeleton for every screen/state
+index.html            Semantic HTML skeleton for every screen/state
 README.md
-screenshots/         Images used in this README
+screenshots/           Images used in this README
 src/
   css/
-    styles.css       All styling: design tokens, base styles, dark theme, font themes, responsive breakpoints
+    styles.css         All styling: design tokens, base styles, dark theme, font themes, responsive breakpoints
   js/
-    main.js          Entry point: wires the other modules together, owns app state, handles events
-    storage.js       The only module that touches localStorage/sessionStorage
-    noteManager.js   The Note data model and note business rules (create/delete/search/filter/tag/archive)
-    auth.js          Password validation and login-matching rules for the simulated account
-    ui.js            The only module that touches the DOM for rendering
-    themes.js        Applies the color/font theme by setting attributes on <html>
+    main.js            Bootstrap + the shared "core" engine (app state, renderApp, the confirmation modal)
+    storage/
+      storage.js       The only module that touches localStorage/sessionStorage
+    models/
+      noteManager.js   The Note data model and note business rules (create/delete/search/filter/tag/archive)
+      auth.js          Password validation and login-matching rules for the simulated account
+    themes/
+      themes.js        Applies the color/font theme by setting attributes on <html>
+    ui/
+      renderNotes.js   Note cards, the notes list, the panel title/active nav
+      renderDetail.js  The note detail/editor form, including its archived-state row
+      renderTags.js    The sidebar's tag list
+      renderAuth.js    Login/signup/reset screens, password show/hide toggle
+      feedback.js      Toast messages, the confirmation modal, validation error text
+      icons.js         Shared SVG icon path data (trash, archive/restore, password eye, tag)
+    events/
+      noteEvents.js       Note CRUD, archive/restore, location, draft/validation — event delegation on the notes list
+      navigationEvents.js All Notes / Archived / tag filter / search / opening Settings
+      settingsEvents.js   Color theme + font theme selection and the mobile Settings sub-panel
+      authEvents.js       Login, signup, logout, forgot/reset/change password
+      keyboardEvents.js   Escape, Tab-trap in the modal, Arrow-key note navigation
+    utils/
+      id.js            generateId()
+      date.js          formatDate()
+      location.js      formatLocation()
+      tags.js          parseTags()
+      validation.js    isRequired(), isValidEmail() — pure, DOM-free checks
 ```
 
 ## Installation
@@ -65,36 +90,35 @@ Then open the printed `localhost` URL in a browser.
 
 ## Architecture
 
-Every module has one job, and data flows in one direction: an event fires → `main.js` asks `noteManager.js` to change the data → asks `storage.js` to persist it → asks `ui.js` to re-render. No module skips a layer — for example, `ui.js` never reads `localStorage` directly, and `storage.js`/`noteManager.js` never touch the DOM.
-
-### Project flow
+Every module has one job. `main.js` is the only file every other module is reachable from (directly or indirectly) — it is never imported by anything else, so there's exactly one entry point and one place that owns the app's shared state.
 
 ```
-User Action  (click "Save Note", type in search, etc.)
-     ↓
-main.js       — the event listener figures out what happened
-     ↓
-noteManager.js — applies the business rule (create/update/delete/search/filter/tag/archive)
-     ↓
-storage.js    — persists the updated notes array to localStorage
-     ↓
-ui.js         — re-renders whatever changed in the DOM
-     ↓
-Updated Interface
+main.js
+ ├─ storage/storage.js         (localStorage / sessionStorage)
+ ├─ models/noteManager.js      (Note class + note business rules)
+ ├─ models/auth.js             (password/login rules)
+ ├─ themes/themes.js           (apply color/font theme)
+ ├─ ui/*.js                    (render note cards, the detail form, tags, auth screens, toasts, the modal)
+ ├─ utils/*.js                 (generateId, formatDate, formatLocation, parseTags, isRequired/isValidEmail)
+ └─ events/*.js                (noteEvents, navigationEvents, settingsEvents, authEvents, keyboardEvents)
 ```
 
-Not every action touches every layer (e.g. toggling a theme goes through `themes.js` + `storage.js`, not `noteManager.js`), but the direction of the flow — main.js orchestrates, the other modules each do one job — is consistent throughout.
+`main.js` holds the app's shared state — the notes array, which note is selected, which view is active — in one plain object (`state`), and builds a small `core` object (`state` plus `renderApp()` and a handful of actions every feature needs: discarding an unsaved note, switching views, opening the confirmation modal). Each `events/*.js` module's `init(core)` receives this object by reference, so a change made in one module (e.g. `state.selectedNoteId = ...` inside `noteEvents.js`) is immediately visible to every other module — no state-management library, just an object passed to whoever needs it, the same way a function's parameters work.
 
-## Module Responsibilities
+`events/*.js` modules never call `localStorage`/`sessionStorage` directly and never build DOM markup themselves — they call into `storage/`, `models/`, and `ui/` for that. `ui/*.js` modules never call `localStorage` and never decide business rules like "which notes match a search." `models/noteManager.js` and `models/auth.js` never touch the DOM or storage at all — they're pure data/rule functions, which is also what makes them straightforward to reason about (and to unit-test, if this project ever added a test runner).
 
-| Module | Responsibility |
-|---|---|
-| **`main.js`** | Entry point and the only file that wires everything together: looks up DOM elements once at the top, owns the app's in-memory state (`notes`, `selectedNoteId`, `activeTag`, `searchQuery`, `showingArchived`), and attaches every event listener. It's the composition root — it imports all four other modules but is never imported by them. |
-| **`storage.js`** | The only module that calls `localStorage`/`sessionStorage`. Exports `saveNotes`/`loadNotes`, `savePreferences`/`loadPreferences`, `saveDraft`/`loadDraft`/`clearDraft`, plus account/session persistence for the simulated login. Every write goes through one shared helper that catches quota-exceeded errors. |
-| **`noteManager.js`** | The `Note` class (with `archive()`, `restore()`, and `addTag()` methods) and the pure data-layer functions that operate on a notes array: `createNote`, `deleteNote`, `updateNote`, `updateArchivedStatus`, `searchNotes`, `filterByTag`, `getUniqueTags`. Never touches the DOM or storage — it only knows about data. |
-| **`ui.js`** | The only module that touches the DOM for rendering. Builds note cards, tag icons, and the tag list from `document.createElement`/`createElementNS` (not `innerHTML`, so note content can never be interpreted as HTML), fills in the detail form, shows validation errors, and drives the toast/modal components. Never calls `localStorage` and never decides business rules. |
-| **`themes.js`** | Applies the color theme ("light"/"dark"/"system") and font theme by setting `data-theme`/`data-font` attributes on `<html>`; the actual visual differences live in `styles.css`'s attribute selectors. |
-| **`auth.js`** | Password-strength validation and login-matching rules for the simulated account. Never touches the DOM or storage. |
+### A typical flow
+
+```
+User clicks "Save Note"
+  → events/noteEvents.js's saveSelectedNote() validates the title
+  → models/noteManager.js's updateNote() applies the change to the notes array
+  → storage/storage.js's saveNotes() persists it
+  → core.renderApp() re-draws the list/detail panel via the ui/ modules
+  → ui/feedback.js's showToast() confirms it to the user
+```
+
+Not every action touches every layer (switching a color theme goes through `events/settingsEvents.js` → `themes/themes.js` + `storage/storage.js`, never touching note data), but the direction — events modules orchestrate, everything else does one job — is consistent throughout.
 
 ## Browser APIs Used
 
@@ -111,6 +135,7 @@ Not every action touches every layer (e.g. toggling a theme goes through `themes
 - Escape closes the modal if one is open, or cancels an in-progress note edit if focus is inside the note form.
 - A single global `:focus-visible` rule puts a visible outline on every interactive element for keyboard users, without showing it on a mouse click.
 - Arrow-key (Up/Down) navigation between note cards, as a bonus beyond plain Tab order.
+- Color contrast was checked against WCAG AA (4.5:1 for normal text) using the actual rendered colors, not just the raw Figma values — see [Intentional design decisions](#intentional-design-decisions) for the two places this required deviating from the literal Figma export.
 
 ## Responsive Design
 
@@ -118,9 +143,9 @@ Three genuinely distinct layouts, not one design squeezed to fit every width:
 
 | Breakpoint | Layout |
 |---|---|
-| **Mobile** (≤767px) | Single-column, one view at a time (list *or* detail *or* tags *or* settings), a bottom nav bar, and a floating "+" button. |
-| **Tablet** (768–899px) | A sidebar (with the tag list) alongside the notes list/detail, which still step one-at-a-time like mobile — there's no room for a 3rd column at this width, so it reuses the same mobile toolbar (Go Back, delete, archive, Cancel, Save Note) instead of the desktop's separate action panel. |
-| **Desktop** (≥900px) | A 4-column grid — sidebar, notes list, note detail, and a dedicated actions panel — all visible at once. |
+| **Phones** (<600px) | Single-column, one view at a time (list *or* detail *or* tags *or* settings), an icon navigation bar, and a floating "+" button. |
+| **Tablets and narrow desktops** (600–1199px) | Single-panel views with a full-width, labelled five-item navigation bar and touch-friendly controls. |
+| **Wide desktop** (≥1200px) | A 4-column grid — sidebar, notes list, note detail, and a dedicated actions panel — all visible at once. |
 
 Tested in both portrait and landscape at each breakpoint; nothing depends on a fixed aspect ratio.
 
@@ -134,12 +159,19 @@ Tested in both portrait and landscape at each breakpoint; nothing depends on a f
 |---|---|---|
 | ![Mobile login](screenshots/mobile-login.png) | ![Mobile home](screenshots/mobile-home.png) | ![Mobile note detail](screenshots/mobile-note-detail.png) |
 
+## Intentional Design Decisions
+
+A few choices that look like they might be bugs or oversights during a review, but aren't:
+
+- **Auth is kept even though it isn't in the grading rubric.** The assignment's evaluation criteria don't mention login/signup at all — but the provided Figma design includes Login, Sign Up, Forgot Password, Reset Password, and Change Password screens, and the Figma design is a project requirement independent of the grading rubric. Rather than cut it to shrink the codebase, it's isolated into its own files (`models/auth.js` for the rules, `events/authEvents.js` for the wiring, `ui/renderAuth.js` for the screens) so it never clutters the note-taking code, and can be explained as one self-contained piece.
+- **Saving a note doesn't clear the form.** The assignment's wording describes a "clear the form after submission" pattern, but this app's Figma design is a persistent master-detail layout (like most real note apps): saving keeps the note open and re-displays its (now-saved) content in the same panel, so you don't lose your place. This matches the Figma interaction, not the literal assignment wording — per the brief, Figma behavior wins when the two disagree.
+- **Theme/font changes use an explicit "Apply Changes" button rather than applying on `change`.** The Figma design shows a deliberate Apply step (so you can preview a radio selection before committing), rather than switching the whole app's theme the instant a radio button is clicked. The assignment's task list mentions a `change` event for "theme and font selectors"; this app reads the checked radio when Apply is clicked instead, again following the Figma interaction.
+- **Two colors deviate slightly from the literal Figma export.** `--color-danger` (a validation/delete red) and `--color-text-muted` (secondary gray text) came from the Figma Dev Mode CSS export, but at their exported values they failed WCAG AA's 4.5:1 text-contrast minimum (3.91:1 and 4.49:1 respectively). Both were darkened by the smallest amount that clears 4.5:1, keeping the same hue. The red additionally needed a *second*, per-theme token (`--color-danger-text`, used for `.field-error`/`.form-error` text) because the button-background red and the error-message-text red have opposite constraints — a color can't simultaneously be dark enough to read on white and light enough to read on the dark theme's near-black background. `--color-danger` itself is unchanged in dark mode (it's always paired with white button text, which doesn't depend on the page's background), while `--color-danger-text` gets a lighter dark-mode override.
+- **The one required field is the title, not every field.** The assignment says "Check for required fields (title minimum)" — title is therefore the only field with a required-field validation error; content and tags are optional, matching both the wording and the Figma form (which shows no required-field indicator on either).
+
 ## Known Limitations
 
-These were deliberate choices, not oversights — noted here in case they come up in review:
-
-- **Auth is simulated, not real security.** The assignment describes a single-user, client-side-only app with no backend, so there is nowhere secure to check a password. Sign Up stores one plain-text `{ email, password }` account in `localStorage` (see `auth.js`'s file comment); Login compares against it directly. This is enough to demonstrate the full flow (including validation, a "forgot password" simulation, and session persistence across reloads) but must never be mistaken for real authentication — anyone with access to the browser's dev tools can read or change the stored credentials. The "Log in with Google" button is decorative (shows a toast) since real OAuth requires a backend and a registered client ID.
-- **`main.js` is larger than a typical single-responsibility file** (around 1,200 lines). It's the composition root for a genuinely multi-feature app (auth, CRUD, archive, tags, search, settings, modals, drafts, geolocation, keyboard handling, and separate mobile-only view logic), and splitting it further would mean adding files beyond the assignment's specified five modules (`auth.js` was already an intentional, justified exception — see [Module Responsibilities](#module-responsibilities)). Each concern is grouped under a clear section comment and is independently easy to point to and explain in a walkthrough.
+- **Auth is simulated, not real security.** The assignment describes a single-user, client-side-only app with no backend, so there is nowhere secure to check a password. Sign Up stores one plain-text `{ email, password }` account in `localStorage` (see `models/auth.js`'s file comment); Login compares against it directly. This is enough to demonstrate the full flow (including validation, a "forgot password" simulation, and session persistence across reloads) but must never be mistaken for real authentication — anyone with access to the browser's dev tools can read or change the stored credentials. The "Log in with Google" button is decorative (shows a toast) since real OAuth requires a backend and a registered client ID.
 - **Geolocation stores raw coordinates**, not a city name. Reverse-geocoding a coordinate into a city requires a third-party API (and typically an API key), which would add an external network dependency this project otherwise avoids.
 - **Sample data is 3 notes**, not a large dataset, since the point of the seed data is just to demonstrate the app on first run, not to stress-test it.
 - **Bonus search-term highlighting is not implemented.** Search itself (title/content/tags, real-time, no-results state) is complete; highlighting the matched substring in results was left out as a bonus, not a core requirement.
@@ -151,21 +183,24 @@ These were deliberate choices, not oversights — noted here in case they come u
 - Export/import notes as a JSON file.
 - A reactive "System" theme that responds live to an OS theme change while the tab is open, instead of only checking once at load/apply time.
 
-## Demoing each feature (for the lab review)
+## How to Test
 
-| Feature | How to show it |
+There's no test runner or build step — every feature is meant to be checked by hand in a browser (see [Running the Project](#running-the-project)). This table doubles as a demo script for a lab review:
+
+| Feature | How to test it |
 |---|---|
 | Auth (simulated) | Sign Up with any email + 8+ character password (auto-logs you in). Settings → Logout. Log back in with the same credentials. Try "Forgot" → wrong email shows an error, the account's email reveals a "continue to reset" link (simulating the emailed link) → set a new password → log in with it. Or Settings → Change Password (wrong old password / weak new password / mismatched confirm all show inline errors). |
 | Create/Read/Update/Delete | Click "+ Create New Note", fill it in, Save. Edit any field on an existing note and Save. Click Delete Note and confirm. |
-| Archive/Restore | Open a note, click Archive Note, confirm. Click "Archived Notes" in the sidebar to see it; open it and click Restore Note. |
+| Archive/Restore | Open a note, click Archive Note, confirm. Click "Archived Notes" in the sidebar to see it; open it and click Restore Note. Following the toast's "Archived Notes"/"All Notes" link should land you on the matching view. |
 | Tags | Type tags (comma-separated) into a note, save, then click that tag in the sidebar (or the mobile Tags page) to filter. |
 | Search | Type into the header search box; try a term that only matches an archived note's tag. |
 | Validation | Create a new note and leave the title blank — Save is disabled and an error shows on blur/submit. |
 | Drafts | Start editing a note, type something, then reload the page — the unsaved text is still there. |
-| Themes/Fonts | Settings (gear icon) → Color Theme / Font Theme → pick an option → Apply Changes. |
-| Geolocation | Open a note, click "+ Add Location" (browser will prompt for permission). |
-| Keyboard | Tab through the app; use Up/Down arrows on a focused note card; open a modal and press Tab (it stays trapped) or Escape (it closes and focus returns). |
-| Responsive | Resize the browser window across ~767px and ~900px, or use dev tools' device toolbar — check both portrait and landscape. |
+| Themes/Fonts | Settings (gear icon) → Color Theme / Font Theme → pick an option → Apply Changes. Reload to confirm it persisted. |
+| Geolocation | Open a note, click "+ Add Location" (browser will prompt for permission). Deny it once to see the graceful error toast. |
+| Keyboard | Tab through the app; use Up/Down arrows on a focused note card; open a modal and press Tab (it stays trapped) or Escape (it closes and focus returns); with a note open, press Escape to cancel an edit. |
+| Responsive | Resize across ~600px and ~1200px, or use a device toolbar — check phone portrait, phone landscape, tablet portrait, tablet landscape, and desktop. |
+| The "unsaved new note" edge case | Click "+ Create New Note", don't type anything, then navigate away (search, a tag, Archived Notes, Settings, or mobile's "Go Back") — the blank note should disappear rather than lingering in the list. |
 
 ## Commit History
 

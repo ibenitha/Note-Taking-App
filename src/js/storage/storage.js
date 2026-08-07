@@ -24,6 +24,21 @@ function safeSetLocalStorageItem(key, value) {
   }
 }
 
+// Every storage read in this file goes through here to avoid duplicated
+// getItem + JSON.parse + error handling boilerplate.
+function getStorageItemJSON(storageArea, key) {
+  const item = storageArea.getItem(key);
+  if (!item) {
+    return null;
+  }
+  try {
+    return JSON.parse(item);
+  } catch (error) {
+    console.error(`Could not parse JSON for key "${key}":`, error);
+    return null;
+  }
+}
+
 // Saves the full notes array as a JSON string. localStorage can only
 // store strings, so objects and arrays must be converted with
 // JSON.stringify before saving, and parsed back with JSON.parse when read.
@@ -34,11 +49,7 @@ export function saveNotes(notes) {
 // Returns the saved notes array, or null if nothing has been saved yet
 // (for example, the very first time the app runs in a browser).
 export function loadNotes() {
-  const savedNotes = localStorage.getItem(NOTES_KEY);
-  if (!savedNotes) {
-    return null;
-  }
-  return JSON.parse(savedNotes);
+  return getStorageItemJSON(localStorage, NOTES_KEY);
 }
 
 export function savePreferences(preferences) {
@@ -46,11 +57,7 @@ export function savePreferences(preferences) {
 }
 
 export function loadPreferences() {
-  const savedPreferences = localStorage.getItem(PREFERENCES_KEY);
-  if (!savedPreferences) {
-    return null;
-  }
-  return JSON.parse(savedPreferences);
+  return getStorageItemJSON(localStorage, PREFERENCES_KEY);
 }
 
 // Drafts use sessionStorage instead of localStorage because a draft should
@@ -60,11 +67,7 @@ export function saveDraft(draft) {
 }
 
 export function loadDraft() {
-  const savedDraft = sessionStorage.getItem(DRAFT_KEY);
-  if (!savedDraft) {
-    return null;
-  }
-  return JSON.parse(savedDraft);
+  return getStorageItemJSON(sessionStorage, DRAFT_KEY);
 }
 
 export function clearDraft() {
@@ -78,11 +81,7 @@ export function saveAccount(account) {
 }
 
 export function loadAccount() {
-  const savedAccount = localStorage.getItem(ACCOUNT_KEY);
-  if (!savedAccount) {
-    return null;
-  }
-  return JSON.parse(savedAccount);
+  return getStorageItemJSON(localStorage, ACCOUNT_KEY);
 }
 
 // The session is just "is someone logged in right now". It uses
@@ -93,13 +92,10 @@ export function saveSession(session) {
 }
 
 export function loadSession() {
-  const savedSession = localStorage.getItem(SESSION_KEY);
-  if (!savedSession) {
-    return null;
-  }
-  return JSON.parse(savedSession);
+  return getStorageItemJSON(localStorage, SESSION_KEY);
 }
 
 export function clearSession() {
   localStorage.removeItem(SESSION_KEY);
 }
+
