@@ -16,6 +16,8 @@ The focus of the assignment is DOM manipulation, event handling (especially dele
 
 ## Features
 
+> This lab extension adds four features on top of the base app: Export/Import, Categories, Rich Text formatting, and Note Sharing Links. See [GIT_WORKFLOW.md](GIT_WORKFLOW.md) for the branching/PR process used to build them.
+
 - **Auth (simulated)**: Login, Sign Up, Forgot Password, and Reset Password screens gate the app, plus a Change Password panel in Settings.
 - **Notes**: create, read, update, delete, with a title-required validation rule.
 - **Archive**: archive/restore notes, with a separate Archived Notes view and its own empty state.
