@@ -16,6 +16,8 @@ The focus of the assignment is DOM manipulation, event handling (especially dele
 
 ## Features
 
+_Note: four Git-workflow lab features (export/import, categories, rich text, and note sharing) are being added via separate feature branches — see the open pull requests._
+
 - **Auth (simulated)**: Login, Sign Up, Forgot Password, and Reset Password screens gate the app, plus a Change Password panel in Settings.
 - **Notes**: create, read, update, delete, with a title-required validation rule.
 - **Archive**: archive/restore notes, with a separate Archived Notes view and its own empty state.
