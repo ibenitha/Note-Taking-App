@@ -1863,6 +1863,14 @@ input[type="search"]::-webkit-search-cancel-button {
   margin: var(--spacing-300) 0;
 }
 
+.data-panel-actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-200);
+  margin: var(--spacing-300) 0;
+  align-items: flex-start;
+}
+
 .theme-option {
   display: flex;
   align-items: center;
