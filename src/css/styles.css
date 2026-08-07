@@ -446,6 +446,74 @@ input[type="search"]::-webkit-search-cancel-button {
   margin: 0 0 var(--spacing-100);
 }
 
+.sidebar-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--spacing-100);
+}
+
+.sidebar-section-header .sidebar-heading {
+  margin-bottom: 0;
+}
+
+.add-category-btn {
+  width: 22px;
+  height: 22px;
+  color: var(--color-text-muted);
+}
+
+.category-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: var(--spacing-200);
+}
+
+.category-link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  font-size: var(--text-preset-4-font-size);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--text-preset-4-line-height);
+  color: var(--color-text);
+}
+
+.category-link:hover {
+  background: var(--color-surface-secondary);
+}
+
+.category-link.is-active {
+  background: var(--color-surface-secondary);
+  color: var(--color-primary);
+}
+
+.category-dot {
+  width: 8px;
+  height: 8px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--color-primary);
+}
+
+.add-category-form {
+  margin-bottom: var(--spacing-200);
+}
+
+.add-category-input {
+  width: 100%;
+  border: 1px solid var(--color-search-border);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+  font-family: inherit;
+  font-size: var(--text-preset-5-font-size);
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
 .tag-list {
   display: flex;
   flex-direction: column;
@@ -545,6 +613,21 @@ input[type="search"]::-webkit-search-cancel-button {
   background: var(--color-tag-bg);
   color: var(--color-text);
   font-size: var(--text-preset-6-font-size);
+  letter-spacing: var(--text-preset-6-letter-spacing);
+}
+
+/* Distinct from .tag-pill (a primary-tinted outline instead of a flat
+   fill) so a note's one category reads as a different kind of label
+   from its many freeform tags. */
+.category-badge {
+  display: inline-flex;
+  margin-top: 4px;
+  padding: 2px 8px;
+  border: 1px solid var(--color-primary);
+  border-radius: var(--radius-4);
+  color: var(--color-primary);
+  font-size: var(--text-preset-6-font-size);
+  font-weight: var(--font-weight-medium);
   letter-spacing: var(--text-preset-6-letter-spacing);
 }
 
@@ -778,6 +861,19 @@ input[type="search"]::-webkit-search-cancel-button {
   line-height: var(--text-preset-5-line-height);
   letter-spacing: var(--text-preset-5-letter-spacing);
   padding: 0;
+}
+
+.category-select {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font-family: inherit;
+  font-size: var(--text-preset-5-font-size);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--text-preset-5-line-height);
+  letter-spacing: var(--text-preset-5-letter-spacing);
+  padding: 0;
+  color: var(--color-text);
 }
 
 .tags-input::placeholder,
