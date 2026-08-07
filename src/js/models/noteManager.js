@@ -5,6 +5,7 @@
 // and never calls localStorage directly (that is storage.js's job).
 
 import { generateId } from "../utils/id.js";
+import { stripHtml } from "../utils/richText.js";
 
 export class Note {
   constructor(title, content, tags) {
@@ -124,13 +125,15 @@ export function updateNote(notes, id, updates) {
 // Returns notes whose title, content, or any tag contains the query text
 // (case-insensitive). Searches every note regardless of archived status,
 // since the assignment treats search as its own view, not a filter on
-// top of "All Notes" / "Archived Notes".
+// top of "All Notes" / "Archived Notes". Content is stored as HTML (see
+// Note.content), so it's stripped down to plain text first — otherwise a
+// query like "li" would match every bulleted list's "<li>" markup.
 export function searchNotes(notes, query) {
   const lowerCaseQuery = query.toLowerCase();
 
   return notes.filter((note) => {
     const titleMatches = note.title.toLowerCase().includes(lowerCaseQuery);
-    const contentMatches = note.content.toLowerCase().includes(lowerCaseQuery);
+    const contentMatches = stripHtml(note.content).toLowerCase().includes(lowerCaseQuery);
     const tagMatches = note.tags.some((tag) => tag.toLowerCase().includes(lowerCaseQuery));
     return titleMatches || contentMatches || tagMatches;
   });

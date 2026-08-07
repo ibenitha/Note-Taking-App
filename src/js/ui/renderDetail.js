@@ -53,7 +53,7 @@ export function renderNoteDetail(note) {
     titleField.value = "";
     tagsField.value = "";
     lastEditedField.textContent = "Not yet saved";
-    contentField.value = "";
+    contentField.innerHTML = "";
     statusRow.hidden = true;
     locationRow.hidden = true;
     locationButton.hidden = true;
@@ -63,7 +63,7 @@ export function renderNoteDetail(note) {
   titleField.value = note.title;
   tagsField.value = note.tags.join(", ");
   lastEditedField.textContent = formatDate(note.timestamp);
-  contentField.value = note.content;
+  contentField.innerHTML = note.content;
   statusRow.hidden = !note.archived;
 
   archiveButtonLabels.forEach((label) => {
