@@ -18,10 +18,12 @@
 
 import * as storage from "./storage/storage.js";
 import * as noteManager from "./models/noteManager.js";
+import * as categoryModel from "./models/category.js";
 import * as themes from "./themes/themes.js";
 import * as renderNotes from "./ui/renderNotes.js";
 import * as renderDetail from "./ui/renderDetail.js";
 import * as renderTags from "./ui/renderTags.js";
+import * as renderCategories from "./ui/renderCategories.js";
 import * as feedback from "./ui/feedback.js";
 import { isRequired } from "./utils/validation.js";
 
@@ -31,6 +33,7 @@ import * as settingsEvents from "./events/settingsEvents.js";
 import * as authEvents from "./events/authEvents.js";
 import * as keyboardEvents from "./events/keyboardEvents.js";
 import * as dataEvents from "./events/dataEvents.js";
+import * as categoryEvents from "./events/categoryEvents.js";
 
 // --- Element references used directly by the core engine -------------------
 
@@ -61,8 +64,10 @@ document.body.dataset.session = storage.loadSession() ? "loggedIn" : "loggedOut"
 
 const state = {
   notes: storage.loadNotes(),
+  categories: storage.loadCategories() || [],
   showingArchived: false,
   activeTag: null,
+  activeCategory: null,
   searchQuery: "",
   selectedNoteId: null,
   // The note behind "Create New Note", while it's still unsaved. It is
@@ -138,6 +143,12 @@ function getVisibleNotes() {
   }
 
   const notesInCurrentView = state.notes.filter((note) => note.archived === state.showingArchived);
+  // A category filter and a tag filter are mutually exclusive views (see
+  // categoryEvents.js's showCategoryFilter / navigationEvents.js's
+  // showTagFilter, which each clear the other), so only one is ever set.
+  if (state.activeCategory !== null) {
+    return noteManager.filterByCategory(notesInCurrentView, state.activeCategory);
+  }
   if (state.activeTag === null) {
     return notesInCurrentView;
   }
@@ -147,6 +158,10 @@ function getVisibleNotes() {
 function getPanelTitle() {
   if (state.searchQuery !== "") {
     return `Showing results for: ${state.searchQuery}`;
+  }
+  if (state.activeCategory !== null) {
+    const category = categoryModel.findCategoryById(state.categories, state.activeCategory);
+    return `Category: ${category ? category.name : ""}`;
   }
   if (state.activeTag !== null) {
     return `Notes Tagged: ${state.activeTag}`;
@@ -196,16 +211,20 @@ function renderApp() {
   const focusWasInNotesList = notesList.contains(document.activeElement);
 
   renderNotes.setPanelTitle(getPanelTitle());
-  // A search or tag filter is a view of its own, so neither "All Notes"
-  // nor "Archived Notes" should show as active in the nav while applied.
-  if (state.searchQuery === "" && state.activeTag === null) {
+  // A search, tag filter, or category filter is a view of its own, so
+  // neither "All Notes" nor "Archived Notes" should show as active in
+  // the nav while any of them is applied.
+  if (state.searchQuery === "" && state.activeTag === null && state.activeCategory === null) {
     renderNotes.setActiveNav(state.showingArchived ? "archived" : "all");
   } else {
     renderNotes.setActiveNav(null);
   }
-  renderNotes.renderAllNotes(visibleNotes, state.selectedNoteId, getEmptyMessage());
-  renderDetail.renderNoteDetail(getSelectedNote());
+  const selectedNote = getSelectedNote();
+  renderNotes.renderAllNotes(visibleNotes, state.selectedNoteId, getEmptyMessage(), state.categories);
+  renderDetail.renderNoteDetail(selectedNote);
   renderTags.renderTagList(noteManager.getUniqueTags(state.notes), state.activeTag);
+  renderCategories.renderCategoryList(state.categories, state.activeCategory);
+  renderCategories.renderCategorySelect(state.categories, selectedNote ? selectedNote.category : null);
   updateSaveButtonState();
   renderPanelSubtitle();
 
@@ -347,3 +366,4 @@ keyboardEvents.init(core, { cancelEditingSelectedNote });
 settingsEvents.init(core);
 authEvents.init(core);
 dataEvents.init(core);
+categoryEvents.init(core);

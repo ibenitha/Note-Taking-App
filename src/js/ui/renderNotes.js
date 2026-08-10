@@ -13,7 +13,11 @@ import { formatLocation } from "../utils/location.js";
 // note titles/content can never be interpreted as HTML. Exported so the
 // mobile search/tag-detail lists can build identical cards instead of
 // maintaining their own copy of this markup.
-export function createNoteCard(note, selectedNoteId) {
+//
+// categories is looked up (rather than reading note.category's name
+// directly) so a renamed or deleted category is reflected immediately —
+// a note only ever stores a category's id, never a name snapshot.
+export function createNoteCard(note, selectedNoteId, categories) {
   const listItem = document.createElement("li");
 
   const card = document.createElement("button");
@@ -32,6 +36,16 @@ export function createNoteCard(note, selectedNoteId) {
   title.className = "note-card-title";
   title.textContent = note.title;
 
+  card.append(title);
+
+  const category = note.category ? categories.find((c) => c.id === note.category) : null;
+  if (category) {
+    const categoryBadge = document.createElement("span");
+    categoryBadge.className = "category-badge";
+    categoryBadge.textContent = category.name;
+    card.append(categoryBadge);
+  }
+
   const tagPills = document.createElement("div");
   tagPills.className = "tag-pills";
   note.tags.forEach((tag) => {
@@ -45,7 +59,7 @@ export function createNoteCard(note, selectedNoteId) {
   date.className = "note-card-date";
   date.textContent = formatDate(note.timestamp);
 
-  card.append(title, tagPills, date);
+  card.append(tagPills, date);
 
   if (note.location !== null) {
     const locationBadge = document.createElement("span");
@@ -63,10 +77,10 @@ export function createNoteCard(note, selectedNoteId) {
 // for a small change (like toggling a location) that shouldn't trigger a
 // full list rebuild. A no-op if that note isn't currently on screen (e.g.
 // it's filtered out, or still an unsaved draft that was never rendered).
-export function updateNoteCard(note, selectedNoteId) {
+export function updateNoteCard(note, selectedNoteId, categories) {
   const existingCard = document.querySelector(`.note-card[data-note-id="${note.id}"]`);
   if (!existingCard) return;
-  existingCard.closest("li").replaceWith(createNoteCard(note, selectedNoteId));
+  existingCard.closest("li").replaceWith(createNoteCard(note, selectedNoteId, categories));
 }
 
 function showEmptyNotesMessage(container, message) {
@@ -80,7 +94,7 @@ function showEmptyNotesMessage(container, message) {
 // there before. Pass the id of the currently open note so its card can
 // be highlighted, and the message to show if the list is empty (the
 // wording is different for "All Notes" vs "Archived Notes").
-export function renderAllNotes(notes, selectedNoteId, emptyMessage) {
+export function renderAllNotes(notes, selectedNoteId, emptyMessage, categories) {
   const notesList = document.querySelector(".notes-list");
   notesList.innerHTML = "";
 
@@ -90,7 +104,7 @@ export function renderAllNotes(notes, selectedNoteId, emptyMessage) {
   }
 
   notes.forEach((note) => {
-    notesList.appendChild(createNoteCard(note, selectedNoteId));
+    notesList.appendChild(createNoteCard(note, selectedNoteId, categories));
   });
 }
 
