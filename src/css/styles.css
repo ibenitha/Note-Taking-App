@@ -35,6 +35,10 @@ input {
   font: inherit;
 }
 
+[hidden] {
+  display: none !important;
+}
+
 /* Used on the search <label> so it stays available to screen readers without
    taking up visual space next to the input's own placeholder text. */
 .visually-hidden {
@@ -44,6 +48,28 @@ input {
   overflow: hidden;
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
+}
+
+/* Accessibility: Skip navigation link (WCAG 2.4.1 - Bypass Blocks)
+   Hidden visually off-screen until focused via keyboard Tab key. */
+.skip-link {
+  position: absolute;
+  top: -100px;
+  left: 16px;
+  z-index: 1000;
+  padding: 10px 16px;
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+  font-weight: var(--font-weight-semibold);
+  font-size: 14px;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  text-decoration: none;
+  transition: top 0.2s ease;
+}
+
+.skip-link:focus {
+  top: 16px;
 }
 
 /* A single, consistent focus ring for every interactive element, since
@@ -72,7 +98,9 @@ textarea:focus-visible {
   --color-header-bg: #f3f5f8;
   --color-text: #0e121b; /* titles, primary values, active nav text */
   --color-text-secondary: #2b303b; /* icons, inactive nav text, labels, dates */
-  --color-text-muted: #717784; /* "Tags" sidebar section heading */
+  /* Darkened from the Figma export's #717784 (4.49:1 on white, just under the
+     WCAG AA minimum of 4.5:1 for normal text) to #6b7280 (4.83:1). */
+  --color-text-muted: #6b7280; /* "Tags" sidebar section heading */
   --color-text-toolbar: #525866; /* mobile toolbar: Go Back, Cancel, icons */
   --color-body-text: #232530; /* note body paragraph text */
   --color-border: #e0e4ea;
@@ -80,7 +108,19 @@ textarea:focus-visible {
   --color-tag-bg: #e0e4ea;
   --color-primary: #335cff;
   --color-primary-hover: #2947d1;
-  --color-danger: #e5484d;
+  /* Darkened from the Figma export's #e5484d (3.91:1 with white — fails
+     WCAG AA's 4.5:1 for the Delete button's white text) to #d63d42 (4.56:1).
+     Only used as a button background, so it doesn't need a per-theme
+     override the way --color-danger-text below does. */
+  --color-danger: #d63d42;
+  /* Text color for .field-error / .form-error messages — a separate token
+     from --color-danger because the "just darken it" fix above works for
+     red-on-white but would fail WCAG again for red-on-near-black in dark
+     mode (a color can't be both darker-than-white and lighter-than-black
+     at once). Dark mode overrides this below with a lighter red instead. */
+  --color-danger-text: #d63d42;
+  --color-success: #21c16b;
+  --color-on-primary: #ffffff; /* text/icon color on a primary/danger button, in both themes */
 
   /* Settings menu column (Figma: Desktop - Settings) */
   --color-settings-nav-active-bg: #f3f5f8;
@@ -225,7 +265,7 @@ body {
 .header-search input {
   width: 100%;
   height: 44px;
-  padding: 12px 16px 12px 44px;
+  padding: 12px 40px 12px 44px;
   border: 1px solid var(--color-search-border);
   border-radius: var(--radius-md);
   background: var(--color-surface);
@@ -240,6 +280,31 @@ body {
 
 .header-search input::placeholder {
   color: var(--color-text-muted);
+}
+
+/* A real, keyboard-focusable clear button (see events/navigationEvents.js)
+   replaces the browser's own <input type="search"> cancel icon below —
+   that native icon can't reliably be given keyboard focus or a consistent
+   accessible name across browsers. */
+.search-clear-btn {
+  position: absolute;
+  right: var(--spacing-150);
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--color-text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.search-clear-btn:hover {
+  color: var(--color-text);
+}
+
+input[type="search"]::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+  appearance: none;
+  display: none;
 }
 
 /* .icon-btn (defined below) also sets display, so this needs the extra
@@ -381,6 +446,74 @@ body {
   margin: 0 0 var(--spacing-100);
 }
 
+.sidebar-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--spacing-100);
+}
+
+.sidebar-section-header .sidebar-heading {
+  margin-bottom: 0;
+}
+
+.add-category-btn {
+  width: 22px;
+  height: 22px;
+  color: var(--color-text-muted);
+}
+
+.category-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: var(--spacing-200);
+}
+
+.category-link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  font-size: var(--text-preset-4-font-size);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--text-preset-4-line-height);
+  color: var(--color-text);
+}
+
+.category-link:hover {
+  background: var(--color-surface-secondary);
+}
+
+.category-link.is-active {
+  background: var(--color-surface-secondary);
+  color: var(--color-primary);
+}
+
+.category-dot {
+  width: 8px;
+  height: 8px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--color-primary);
+}
+
+.add-category-form {
+  margin-bottom: var(--spacing-200);
+}
+
+.add-category-input {
+  width: 100%;
+  border: 1px solid var(--color-search-border);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+  font-family: inherit;
+  font-size: var(--text-preset-5-font-size);
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
 .tag-list {
   display: flex;
   flex-direction: column;
@@ -480,6 +613,21 @@ body {
   background: var(--color-tag-bg);
   color: var(--color-text);
   font-size: var(--text-preset-6-font-size);
+  letter-spacing: var(--text-preset-6-letter-spacing);
+}
+
+/* Distinct from .tag-pill (a primary-tinted outline instead of a flat
+   fill) so a note's one category reads as a different kind of label
+   from its many freeform tags. */
+.category-badge {
+  display: inline-flex;
+  margin-top: 4px;
+  padding: 2px 8px;
+  border: 1px solid var(--color-primary);
+  border-radius: var(--radius-4);
+  color: var(--color-primary);
+  font-size: var(--text-preset-6-font-size);
+  font-weight: var(--font-weight-medium);
   letter-spacing: var(--text-preset-6-letter-spacing);
 }
 
@@ -609,7 +757,7 @@ body {
   font-size: var(--text-preset-6-font-size);
   line-height: var(--text-preset-6-line-height);
   letter-spacing: var(--text-preset-6-letter-spacing);
-  color: var(--color-danger);
+  color: var(--color-danger-text);
 }
 
 .field-error:empty {
@@ -641,7 +789,7 @@ body {
 
 .toast-icon {
   flex-shrink: 0;
-  color: #21c16b;
+  color: var(--color-success);
 }
 
 .toast-message {
@@ -683,10 +831,6 @@ body {
   letter-spacing: var(--text-preset-5-letter-spacing);
 }
 
-.meta-row[hidden] {
-  display: none;
-}
-
 .meta-icon {
   color: var(--color-text-secondary);
   flex-shrink: 0;
@@ -719,10 +863,67 @@ body {
   padding: 0;
 }
 
+.category-select {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font-family: inherit;
+  font-size: var(--text-preset-5-font-size);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--text-preset-5-line-height);
+  letter-spacing: var(--text-preset-5-letter-spacing);
+  padding: 0;
+  color: var(--color-text);
+}
+
 .tags-input::placeholder,
-.note-title-input::placeholder,
-.note-body-input::placeholder {
+.note-title-input::placeholder {
   color: var(--color-text-secondary);
+}
+
+.rich-text-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding-bottom: var(--spacing-100);
+  margin-bottom: var(--spacing-100);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.rt-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radius-sm);
+  color: var(--color-text-secondary);
+  font-size: var(--text-preset-5-font-size);
+}
+
+.rt-btn:hover {
+  background: var(--color-surface-secondary);
+}
+
+.rt-btn.is-active {
+  background: var(--color-surface-secondary);
+  color: var(--color-primary);
+}
+
+.rt-toolbar-divider {
+  width: 1px;
+  height: 20px;
+  margin: 0 4px;
+  background: var(--color-border);
+}
+
+/* .note-body-input is a contenteditable div, not a real form field, so
+   it has no native placeholder — this is the standard CSS-only stand-in:
+   show the placeholder text via ::before only while the div is empty. */
+.note-body-input:empty::before {
+  content: attr(data-placeholder);
+  color: var(--color-text-secondary);
+  pointer-events: none;
 }
 
 .note-body-input {
@@ -730,14 +931,27 @@ body {
   min-height: 320px;
   border: none;
   background: transparent;
-  resize: none;
   font-family: inherit;
   font-size: var(--text-preset-5-font-size);
   font-weight: var(--font-weight-regular);
   line-height: var(--text-preset-5-line-height);
   letter-spacing: var(--text-preset-5-letter-spacing);
   color: var(--color-body-text);
-  white-space: pre-wrap;
+  outline: none;
+}
+
+/* execCommand("insertUnorderedList"/"insertOrderedList") inserts real
+   <ul>/<ol><li> markup — restore the markers the global reset (list-style:
+   none) strips from every <ul>/<ol> in the app, scoped to just this field
+   so nothing else (e.g. the sidebar's tag/category lists) is affected. */
+.note-body-input ul {
+  list-style: disc;
+  padding-left: 1.5em;
+}
+
+.note-body-input ol {
+  list-style: decimal;
+  padding-left: 1.5em;
 }
 
 .note-detail-footer {
@@ -798,7 +1012,7 @@ body {
 
 .btn-primary {
   background: var(--color-primary);
-  color: #ffffff;
+  color: var(--color-on-primary);
 }
 
 .btn-primary:hover {
@@ -810,16 +1024,7 @@ body {
   color: var(--color-text-toolbar);
 }
 
-.btn-outline {
-  min-height: 44px;
-  padding: 12px 16px;
-  gap: 8px;
-  border: 1px solid var(--color-search-border);
-  border-radius: var(--radius-md);
-  color: var(--color-text);
-  background: var(--color-surface);
-}
-
+.btn-outline,
 .btn-danger-outline {
   min-height: 44px;
   padding: 12px 16px;
@@ -898,7 +1103,7 @@ body {
   justify-content: center;
   border-radius: 50%;
   background: var(--color-primary);
-  color: #ffffff;
+  color: var(--color-on-primary);
   box-shadow: var(--shadow-small);
 }
 
@@ -1012,7 +1217,7 @@ body {
    12. Small mobile refinements
    ========================================================================== */
 
-@media (max-width: 767px) {
+@media (max-width: 1199px) {
   .app-header {
     gap: var(--spacing-150);
     padding: var(--spacing-150) var(--spacing-200);
@@ -1061,142 +1266,13 @@ body {
     left: 50%;
     transform: translateX(-50%);
     bottom: 0;
-    width: min(100%, 375px);
+    width: min(100%, 480px);
     padding: 12px 16px;
     background: var(--color-surface);
     border-top: 1px solid var(--color-border);
     box-shadow: var(--shadow-bottom-nav);
   }
 
-  .bottom-nav-item {
-    width: 68.6px;
-    height: 44px;
-    padding: 4px 0;
-    gap: 4px;
-    font-size: 0;
-  }
-
-  .bottom-nav-item span {
-    display: none;
-  }
-
-  .fab {
-    right: var(--spacing-200);
-    bottom: 88px;
-    width: 56px;
-    height: 56px;
-  }
-
-  /* --- Panel subtitle (Archived Notes description, tag filter description) --- */
-  .panel-subtitle {
-    margin: -8px 0 16px;
-    font-size: var(--text-preset-5-font-size);
-    font-weight: var(--font-weight-regular);
-    line-height: 1.5;
-    letter-spacing: var(--text-preset-5-letter-spacing);
-    color: var(--color-text-secondary);
-  }
-
-  .panel-subtitle[hidden] {
-    display: none;
-  }
-
-  /* --- Mobile Search Panel --- */
-  .mobile-search-panel {
-    display: none;
-    padding: var(--spacing-200);
-    padding-bottom: 80px;
-  }
-
-  [data-mobile-view="search"] .mobile-search-panel {
-    display: block;
-  }
-
-  [data-mobile-view="search"] .notes-list-panel,
-  [data-mobile-view="search"] .note-detail-panel {
-    display: none;
-  }
-
-  [data-mobile-view="search"] .fab {
-    display: flex;
-  }
-
-  .mobile-search-field {
-    position: relative;
-    margin-bottom: 12px;
-  }
-
-  .mobile-search-icon {
-    position: absolute;
-    left: 14px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: var(--color-text-muted);
-    pointer-events: none;
-  }
-
-  .mobile-search-input {
-    width: 100%;
-    height: 44px;
-    padding: 12px 16px 12px 44px;
-    border: 1px solid var(--color-search-border);
-    border-radius: var(--radius-full);
-    background: var(--color-surface-secondary);
-    color: var(--color-text);
-    font-family: inherit;
-    font-size: var(--text-preset-5-font-size);
-    font-weight: var(--font-weight-regular);
-    line-height: var(--text-preset-5-line-height);
-    letter-spacing: var(--text-preset-5-letter-spacing);
-    box-shadow: none;
-    -webkit-appearance: none;
-  }
-
-  .mobile-search-input:focus {
-    outline: 2px solid var(--color-primary);
-    outline-offset: 2px;
-  }
-
-  .mobile-search-subtitle {
-    font-size: var(--text-preset-5-font-size);
-    font-weight: var(--font-weight-regular);
-    line-height: 1.5;
-    letter-spacing: var(--text-preset-5-letter-spacing);
-    color: var(--color-text-secondary);
-    margin: 0 0 16px;
-  }
-
-  .mobile-search-subtitle:empty {
-    display: none;
-  }
-
-  /* --- Mobile Tags Panel --- */
-  .mobile-tags-panel {
-    display: none;
-    padding: var(--spacing-200);
-    padding-bottom: 80px;
-  }
-
-  [data-mobile-view="tags"] .mobile-tags-panel {
-    display: block;
-  }
-
-  [data-mobile-view="tags"] .notes-list-panel,
-  [data-mobile-view="tags"] .note-detail-panel {
-    display: none;
-  }
-
-  [data-mobile-view="tags"] .fab {
-    display: flex;
-  }
-
-  .mobile-tags-list {
-    margin-top: 8px;
-  }
-
-  .mobile-tags-list li {
-    border-bottom: 1px solid var(--color-border);
-  }
 
   .mobile-tag-list-item {
     display: flex;
@@ -1393,7 +1469,240 @@ body {
    13. Desktop layout
    ========================================================================== */
 
-@media (min-width: 900px) {
+/* Tablet uses the same single-panel views as mobile, but the navigation is a
+   full-width, labelled bar as shown in the tablet designs. */
+@media (min-width: 600px) and (max-width: 1199px) {
+  .app-header {
+    height: 74px;
+    padding: var(--spacing-200) var(--spacing-400);
+  }
+
+  .logo {
+    width: 100%;
+    flex: 1 1 auto;
+  }
+
+  .app-body {
+    display: block;
+    min-height: calc(100vh - 74px);
+    padding-bottom: 98px;
+  }
+
+  .sidebar {
+    display: none;
+  }
+
+  .create-note-btn.btn {
+    display: none;
+  }
+
+  .notes-list-panel,
+  .note-detail-panel {
+    display: block;
+    min-height: auto;
+    height: auto;
+    border-right: 0;
+    overflow: visible;
+  }
+
+  .mobile-search-panel,
+  .mobile-tags-panel,
+  .mobile-tag-detail-panel,
+  .mobile-settings-sub-panel {
+    padding-bottom: 98px;
+  }
+
+  .bottom-nav {
+    left: 0;
+    transform: none;
+    bottom: 0;
+    display: flex;
+    width: 100%;
+    height: 74px;
+    padding: 12px 32px;
+    background: var(--color-surface);
+    border-top: 1px solid var(--color-border);
+    box-shadow: var(--shadow-bottom-nav);
+  }
+
+  .bottom-nav-item {
+    width: 68.6px;
+    height: 44px;
+    padding: 4px 0;
+    gap: 4px;
+    font-size: 0;
+  }
+
+  .bottom-nav-item span {
+    display: none;
+  }
+
+  .fab {
+    right: var(--spacing-200);
+    bottom: 88px;
+    width: 56px;
+    height: 56px;
+  }
+
+  /* --- Panel subtitle (Archived Notes description, tag filter description) --- */
+  .panel-subtitle {
+    margin: -8px 0 16px;
+    font-size: var(--text-preset-5-font-size);
+    font-weight: var(--font-weight-regular);
+    line-height: 1.5;
+    letter-spacing: var(--text-preset-5-letter-spacing);
+    color: var(--color-text-secondary);
+  }
+
+  .panel-subtitle[hidden] {
+    display: none;
+  }
+
+  /* --- Mobile Search Panel --- */
+  .mobile-search-panel {
+    display: none;
+    padding: var(--spacing-200);
+    padding-bottom: 80px;
+  }
+
+  [data-mobile-view="search"] .mobile-search-panel {
+    display: block;
+  }
+
+  [data-mobile-view="search"] .notes-list-panel,
+  [data-mobile-view="search"] .note-detail-panel {
+    display: none;
+  }
+
+  [data-mobile-view="search"] .fab {
+    display: flex;
+  }
+
+  .mobile-search-field {
+    position: relative;
+    margin-bottom: 12px;
+  }
+
+  .mobile-search-icon {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--color-text-muted);
+    pointer-events: none;
+  }
+
+  .mobile-search-input {
+    width: 100%;
+    height: 44px;
+    padding: 12px 40px 12px 44px;
+    border: 1px solid var(--color-search-border);
+    border-radius: var(--radius-full);
+    background: var(--color-surface-secondary);
+    color: var(--color-text);
+    font-family: inherit;
+    font-size: var(--text-preset-5-font-size);
+    font-weight: var(--font-weight-regular);
+    line-height: var(--text-preset-5-line-height);
+    letter-spacing: var(--text-preset-5-letter-spacing);
+    box-shadow: none;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+
+  .mobile-search-input:focus {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+
+  .mobile-search-subtitle {
+    font-size: var(--text-preset-5-font-size);
+    font-weight: var(--font-weight-regular);
+    line-height: 1.5;
+    letter-spacing: var(--text-preset-5-letter-spacing);
+    color: var(--color-text-secondary);
+    margin: 0 0 16px;
+  }
+
+  .mobile-search-subtitle:empty {
+    display: none;
+  }
+
+  /* --- Mobile Tags Panel --- */
+  .mobile-tags-panel {
+    display: none;
+    padding: var(--spacing-200);
+    padding-bottom: 80px;
+  }
+
+  [data-mobile-view="tags"] .mobile-tags-panel {
+    display: block;
+  }
+
+  [data-mobile-view="tags"] .notes-list-panel,
+  [data-mobile-view="tags"] .note-detail-panel {
+    display: none;
+  }
+
+  [data-mobile-view="tags"] .fab {
+    display: flex;
+  }
+
+  .mobile-tags-list {
+    margin-top: 8px;
+  }
+
+  .mobile-tags-list li {
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .bottom-nav-item {
+    position: relative;
+    flex: 1 1 0;
+    width: auto;
+    height: 50px;
+    padding: 4px 0;
+    font-size: var(--text-preset-3-font-size);
+    font-weight: var(--font-weight-regular);
+  }
+
+  .bottom-nav-item span {
+    display: block;
+  }
+
+  .bottom-nav-item + .bottom-nav-item {
+    border-left: 1px solid var(--color-menu-divider);
+  }
+
+  .bottom-nav-item.is-active {
+    background: transparent;
+  }
+
+  .bottom-nav-item.is-active::before {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    width: 80px;
+    height: 50px;
+    content: "";
+    background: var(--color-menu-item-active-bg);
+    border-radius: var(--radius-6);
+    transform: translateX(-50%);
+  }
+
+  .bottom-nav-item > svg,
+  .bottom-nav-item > span {
+    position: relative;
+  }
+
+  .fab {
+    display: flex;
+    right: var(--spacing-400);
+    bottom: 98px;
+  }
+}
+
+@media (min-width: 1200px) {
   /* Typography: Inter is used across the entire app on all breakpoints.
      The desktop query previously set Noto Serif — that was incorrect per
      the style guide which specifies Inter for all 6 text presets. */
@@ -1417,11 +1726,8 @@ body {
   }
 
   .header-search {
-    margin-left: auto;
-  }
-
-  .header-search {
     display: block;
+    margin-left: auto;
   }
 
   .settings-btn.icon-btn {
@@ -1545,13 +1851,14 @@ body {
   .settings-content {
     flex: 1;
     min-width: 0;
+    max-width: 600px; /* Figma: the settings form stops growing at a fixed readable width instead of stretching across the page */
     padding: 32px 32px 20px;
     display: block; /* ensure visible on desktop even though mobile hides it */
   }
 }
 
 /* ==========================================================================
-   12. Settings page
+   14. Settings page
    ========================================================================== */
 
 .settings-panel {
@@ -1581,7 +1888,7 @@ body {
   gap: var(--spacing-300);
 }
 
-@media (min-width: 900px) {
+@media (min-width: 1200px) {
   /* Must follow the mobile column rule above — same specificity, later in file wins */
   .settings-body {
     flex-direction: row;
@@ -1709,6 +2016,14 @@ body {
   margin: var(--spacing-300) 0;
 }
 
+.data-panel-actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-200);
+  margin: var(--spacing-300) 0;
+  align-items: flex-start;
+}
+
 .theme-option {
   display: flex;
   align-items: center;
@@ -1813,7 +2128,7 @@ body {
 }
 
 /* ==========================================================================
-   13. Confirmation modal
+   15. Confirmation modal
    ========================================================================== */
 
 .modal-overlay {
@@ -1892,11 +2207,11 @@ body {
 
 .btn-danger {
   background: var(--color-danger);
-  color: #ffffff;
+  color: var(--color-on-primary);
 }
 
 /* ==========================================================================
-   14. Dark theme
+   16. Dark theme
    Overriding the same custom properties used everywhere else means no
    component CSS above needs to change to support dark mode.
    ========================================================================== */
@@ -1920,10 +2235,14 @@ body {
   --color-menu-divider: #232530;
   --color-menu-item-active-bg: #ebf1ff;
   --shadow-bottom-nav: 0 -5px 6px rgba(0, 0, 0, 0.5);
+  /* A lighter red than --color-danger-text's light-theme value — that
+     value is dark-on-white for contrast, which would fail again as
+     dark-red-on-near-black here. */
+  --color-danger-text: #f0696d;
 }
 
 /* ==========================================================================
-   15. Font themes
+   17. Font themes
    ========================================================================== */
 
 [data-font="serif"] {
@@ -1935,7 +2254,7 @@ body {
 }
 
 /* ==========================================================================
-   16. Auth screens (login / sign up / forgot & reset password)
+   18. Auth screens (login / sign up / forgot & reset password)
    The whole notes app lives in .app-shell and the whole auth flow lives in
    .auth-shell; data-session on <body> shows exactly one of the two.
    ========================================================================== */
@@ -1955,6 +2274,77 @@ body {
 
 [data-session="loggedOut"] .app-shell {
   display: none;
+}
+
+/* ==========================================================================
+   Shared note view — a third top-level state alongside the auth screen
+   and the main app, shown with no login required when the URL carries a
+   ?share=... payload (see utils/shareLink.js and main.js's bootstrap).
+   ========================================================================== */
+
+.shared-note-view {
+  display: none;
+}
+
+[data-app-view="shared"] .shared-note-view {
+  display: flex;
+  justify-content: center;
+  min-height: 100vh;
+  padding: var(--spacing-400) var(--spacing-200);
+  background: var(--color-bg);
+}
+
+/* The shared view replaces everything else, regardless of session or
+   mobile-view state, so these are hidden with !important the same way
+   [data-session="loggedOut"] hides .app-shell above. */
+[data-app-view="shared"] .app-shell,
+[data-app-view="shared"] .auth-shell,
+[data-app-view="shared"] .bottom-nav,
+[data-app-view="shared"] .fab {
+  display: none !important;
+}
+
+.shared-note-card {
+  width: 100%;
+  max-width: 640px;
+  height: fit-content;
+  padding: var(--spacing-400);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-10);
+  background: var(--color-surface);
+}
+
+.shared-note-banner {
+  margin: 0 0 var(--spacing-300);
+  padding: var(--spacing-150);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-secondary);
+  color: var(--color-text-secondary);
+  font-size: var(--text-preset-5-font-size);
+}
+
+.shared-note-title {
+  margin: 0 0 var(--spacing-150);
+}
+
+.shared-note-tags {
+  margin-bottom: var(--spacing-150);
+}
+
+.shared-note-date {
+  display: block;
+  margin-bottom: var(--spacing-300);
+  color: var(--color-text-secondary);
+  font-size: var(--text-preset-6-font-size);
+}
+
+.shared-note-content {
+  min-height: 0;
+  margin-bottom: var(--spacing-400);
+}
+
+.shared-note-cta {
+  width: fit-content;
 }
 
 .auth-card {
@@ -2071,7 +2461,7 @@ body {
   font-weight: var(--font-weight-regular);
   line-height: var(--text-preset-6-line-height);
   letter-spacing: var(--text-preset-6-letter-spacing);
-  color: var(--color-danger);
+  color: var(--color-danger-text);
 }
 
 .form-error:empty {
