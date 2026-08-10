@@ -147,6 +147,68 @@ export function getUniqueTags(notes) {
   return Array.from(tagSet).sort();
 }
 
+// --- Export / import -------------------------------------------------------
+// Import works with plain JSON (the file the user picks), the same kind
+// of plain object storage.js hands back from loadNotes() — so validating
+// and merging that data lives here, next to the rest of the note-shape
+// rules, instead of in the events/ file that only handles the file I/O.
+
+// Checks that parsed JSON has the shape produced by exporting notes (an
+// object with a "notes" array), and that every entry in it has at least
+// the fields a note needs. Throws a descriptive error instead of
+// returning false/true, so the caller can show the exact problem to the
+// user rather than a generic "invalid file" message.
+export function validateImportedNotes(data) {
+  if (!data || typeof data !== "object" || Array.isArray(data) || !Array.isArray(data.notes)) {
+    throw new Error("This file doesn't look like a notes export.");
+  }
+
+  data.notes.forEach((note, index) => {
+    if (!note || typeof note !== "object") {
+      throw new Error(`Entry ${index + 1} in the file is not a valid note.`);
+    }
+    if (typeof note.title !== "string" || typeof note.content !== "string") {
+      throw new Error(`Entry ${index + 1} in the file is missing a title or content.`);
+    }
+    if (note.tags !== undefined && !Array.isArray(note.tags)) {
+      throw new Error(`Entry ${index + 1} in the file has invalid tags.`);
+    }
+  });
+
+  return data.notes;
+}
+
+// Adds imported notes to the given array, skipping any that already
+// exist — matched by id (re-importing the same export twice) or by an
+// identical title+content pair (importing a note that was exported from
+// a different session and would get a freshly generated id here).
+// Reuses createNote() so an imported note goes through the same
+// construction as a note created by hand, then restores whatever
+// timestamp/archived/location the import brought with it.
+export function mergeImportedNotes(notes, importedRawNotes) {
+  let addedCount = 0;
+  let duplicateCount = 0;
+
+  importedRawNotes.forEach((rawNote) => {
+    const isDuplicate = notes.some(
+      (note) => note.id === rawNote.id || (note.title === rawNote.title && note.content === rawNote.content)
+    );
+
+    if (isDuplicate) {
+      duplicateCount++;
+      return;
+    }
+
+    const note = createNote(notes, rawNote.title, rawNote.content, rawNote.tags || []);
+    if (typeof rawNote.timestamp === "string") note.timestamp = rawNote.timestamp;
+    if (rawNote.archived === true) note.archive();
+    if (rawNote.location) note.location = rawNote.location;
+    addedCount++;
+  });
+
+  return { addedCount, duplicateCount };
+}
+
 // Sample notes used only the very first time the app runs, before the
 // user has saved anything to localStorage. This lets the app demonstrate
 // its features immediately instead of starting on an empty list.

@@ -30,6 +30,7 @@ import * as navigationEvents from "./events/navigationEvents.js";
 import * as settingsEvents from "./events/settingsEvents.js";
 import * as authEvents from "./events/authEvents.js";
 import * as keyboardEvents from "./events/keyboardEvents.js";
+import * as dataEvents from "./events/dataEvents.js";
 
 // --- Element references used directly by the core engine -------------------
 
@@ -343,5 +344,6 @@ core.showArchivedNotes = showArchivedNotes;
 const { cancelEditingSelectedNote } = noteEvents.init(core, savedDraft);
 keyboardEvents.init(core, { cancelEditingSelectedNote });
 
-settingsEvents.init();
+settingsEvents.init(core);
 authEvents.init(core);
+dataEvents.init(core);

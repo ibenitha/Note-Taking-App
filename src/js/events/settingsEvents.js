@@ -11,6 +11,7 @@ import * as storage from "../storage/storage.js";
 import * as themes from "../themes/themes.js";
 import * as feedback from "../ui/feedback.js";
 import { wireChangePasswordForm } from "./authEvents.js";
+import { wireDataPanel } from "./dataEvents.js";
 
 // Matches the "@media (min-width: 1200px)" desktop breakpoint in styles.css.
 // Narrow desktops and tablets use the single-panel Settings flow.
@@ -25,6 +26,10 @@ const applyThemeButton = document.querySelector(".apply-theme-btn");
 const applyFontButton = document.querySelector(".apply-font-btn");
 const mobileSettingsBackButton = document.querySelector(".mobile-settings-back-btn");
 const mobileSettingsSubContent = document.querySelector(".mobile-settings-sub-content");
+
+// Set once by init() — needed so the mobile-cloned "Data" panel can be
+// wired to the same shared state/render function as the desktop one.
+let core;
 
 function getCheckedRadioValue(radios) {
   const checkedRadio = Array.from(radios).find((radio) => radio.checked);
@@ -99,11 +104,16 @@ function showMobileSettingsSubPanel(sectionKey) {
     wireChangePasswordForm(clonedPasswordForm);
   }
 
+  if (sectionKey === "data") {
+    wireDataPanel(mobileSettingsSubContent, core);
+  }
+
   document.body.dataset.appView = "settings";
   document.body.dataset.mobileSettingsView = "sub";
 }
 
-export function init() {
+export function init(coreArg) {
+  core = coreArg;
   // Settings nav items — on mobile navigate to a sub-panel; on desktop
   // just switch which section is visible.
   settingsNav.addEventListener("click", (event) => {
