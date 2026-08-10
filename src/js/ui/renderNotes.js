@@ -32,7 +32,11 @@ export function createNoteCard(note, selectedNoteId, categories) {
     card.classList.add("is-archived");
   }
 
-  const title = document.createElement("h3");
+  // h2, not h3: the panel title above the list (e.g. "All Notes") is an
+  // h1, so a card title one level below it must be h2 — jumping straight
+  // to h3 skips a heading level, which accessibility audits (and screen
+  // reader users navigating by heading) flag as broken document structure.
+  const title = document.createElement("h2");
   title.className = "note-card-title";
   title.textContent = note.title;
 
