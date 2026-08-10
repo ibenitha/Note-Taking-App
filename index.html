@@ -265,6 +265,9 @@
           Go Back
         </button>
         <div class="toolbar-actions">
+          <button type="button" class="icon-btn share-btn" aria-label="Share note">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="2.5" /><circle cx="6" cy="12" r="2.5" /><circle cx="18" cy="19" r="2.5" /><path d="M8.2 10.7L15.8 6.3M8.2 13.3L15.8 17.7" /></svg>
+          </button>
           <button type="button" class="icon-btn delete-btn" aria-label="Delete note">
             <svg width="18" height="18" viewBox="0 0 24 25" fill="none" aria-hidden="true"><path stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M14.8521 3.87899L15.6702 5.66378H18.3097C19.1212 5.66378 19.7791 6.32166 19.7791 7.1332V8.2214C19.7791 8.77626 19.3293 9.22606 18.7745 9.22606H5.00466C4.4498 9.22606 4 8.77626 4 8.2214V7.1332C4 6.32166 4.65788 5.66378 5.46943 5.66378H8.10885L8.92705 3.87899C9.17255 3.34339 9.70775 3 10.2969 3H13.4821C14.0713 3 14.6065 3.34339 14.8521 3.87899Z" /><path stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M18.24 9.30078V17.9865C18.24 19.6511 16.9073 21.0005 15.2634 21.0005H8.51661C6.8727 21.0005 5.54004 19.6511 5.54004 17.9865V9.30078" /><path stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M10.1992 12.8164V17.3248M13.5796 12.8164V17.3248" /></svg>
           </button>
@@ -340,6 +343,10 @@
 
     <!-- Action panel: desktop-only. On mobile these same actions are the toolbar's trash/archive icons. -->
     <aside class="note-actions-panel" aria-label="Note actions">
+      <button type="button" class="btn btn-outline share-btn">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="2.5" /><circle cx="6" cy="12" r="2.5" /><circle cx="18" cy="19" r="2.5" /><path d="M8.2 10.7L15.8 6.3M8.2 13.3L15.8 17.7" /></svg>
+        Share Note
+      </button>
       <button type="button" class="btn btn-outline archive-btn">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M21 7.78216V16.2169C21 19.165 18.9188 21 15.9736 21H8.02638C5.08119 21 3 19.165 3 16.2159V7.78216C3 4.83405 5.08119 3 8.02638 3H15.9736C18.9188 3 21 4.84281 21 7.78216Z" /><path stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M15 14L11.9982 17L9 14" /><path stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M11.998 17V10" /><path stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M20.9336 7H3.05859" /></svg>
         <span class="archive-btn-label">Archive Note</span>
@@ -610,6 +617,20 @@
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6L18 18" /><path d="M18 6L6 18" /></svg>
     </button>
   </div>
+
+  <!-- Shared note view: shown instead of the whole app (no login required)
+       when the URL has a ?share=... param — see utils/shareLink.js and
+       main.js's bootstrap check. Entirely read-only: no edit controls. -->
+  <section class="shared-note-view" aria-label="Shared note">
+    <div class="shared-note-card">
+      <p class="shared-note-banner">This is a read-only shared note.</p>
+      <h1 class="shared-note-title"></h1>
+      <div class="tag-pills shared-note-tags"></div>
+      <time class="shared-note-date"></time>
+      <div class="shared-note-content note-body-input"></div>
+      <a class="btn btn-primary shared-note-cta" href="./index.html">Open Notes App</a>
+    </div>
+  </section>
 
   <script type="module" src="src/js/main.js"></script>
 </body>

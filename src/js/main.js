@@ -34,6 +34,9 @@ import * as authEvents from "./events/authEvents.js";
 import * as keyboardEvents from "./events/keyboardEvents.js";
 import * as dataEvents from "./events/dataEvents.js";
 import * as categoryEvents from "./events/categoryEvents.js";
+import * as shareEvents from "./events/shareEvents.js";
+import * as renderShared from "./ui/renderShared.js";
+import { decodeShareLink } from "./utils/shareLink.js";
 
 // --- Element references used directly by the core engine -------------------
 
@@ -367,3 +370,17 @@ settingsEvents.init(core);
 authEvents.init(core);
 dataEvents.init(core);
 categoryEvents.init(core);
+shareEvents.init(core);
+
+// --- Shared note link -----------------------------------------------------
+// Checked last, so it overrides whatever the rest of bootstrap just set
+// up: a visitor opening a ?share=... link sees only the read-only note,
+// regardless of session state or which view main.js otherwise landed on.
+// No login required — the note's data travels inside the link itself
+// (see utils/shareLink.js), so there's nothing to look up or authorize.
+
+const sharedNote = decodeShareLink(window.location.search);
+if (sharedNote !== null) {
+  renderShared.renderSharedNoteView(sharedNote);
+  document.body.dataset.appView = "shared";
+}
