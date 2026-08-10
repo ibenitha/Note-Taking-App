@@ -31,6 +31,9 @@ const deleteButtons = document.querySelectorAll(".delete-btn");
 const archiveButtons = document.querySelectorAll(".archive-btn");
 const locationButton = document.querySelector(".location-btn");
 
+const richTextToolbar = document.querySelector(".rich-text-toolbar");
+const richTextButtons = document.querySelectorAll(".rt-btn");
+
 // Set once by init() and used by every handler function below — see
 // main.js for what core contains (state + renderApp + the shared actions).
 let core;
@@ -89,7 +92,7 @@ function saveDraftFromForm() {
     noteId: state.selectedNoteId,
     title: titleInput.value,
     tags: tagsInput.value,
-    content: contentInput.value,
+    content: contentInput.innerHTML,
   });
 }
 
@@ -101,7 +104,7 @@ function saveSelectedNote() {
 
   const updates = {
     title: titleInput.value,
-    content: contentInput.value,
+    content: contentInput.innerHTML,
     tags: parseTags(tagsInput.value),
   };
 
@@ -212,6 +215,45 @@ function handleArchiveButtonClick() {
   });
 }
 
+// --- Rich text formatting ---------------------------------------------------
+// Bold/italic/underline and list buttons all just apply a native
+// document.execCommand to whatever's selected in the contenteditable
+// content field — the same approach the browser's own "Reader mode"
+// text controls use. It's a deprecated API, but still broadly supported
+// and by far the simplest way to get real formatting commands without
+// building a text-editing engine from scratch for this assignment.
+
+function handleRichTextButtonClick(event) {
+  const button = event.target.closest(".rt-btn");
+  if (!button) return;
+
+  contentInput.focus();
+  document.execCommand(button.dataset.rtCommand);
+  updateRichTextToolbarState();
+  saveDraftFromForm();
+}
+
+// Reflects which commands apply to the current selection (e.g. the Bold
+// button looks pressed while the cursor is inside bold text), the same
+// idea as a word processor's toolbar.
+function updateRichTextToolbarState() {
+  richTextButtons.forEach((button) => {
+    const isActive = document.queryCommandState(button.dataset.rtCommand);
+    button.classList.toggle("is-active", isActive);
+    button.setAttribute("aria-pressed", String(isActive));
+  });
+}
+
+// Pasting from another app (e.g. a Word document or a web page) can
+// bring in arbitrary HTML — stripping it down to plain text on paste
+// keeps the note's formatting limited to what the toolbar buttons above
+// actually produce.
+function handleContentPaste(event) {
+  event.preventDefault();
+  const text = event.clipboardData.getData("text/plain");
+  document.execCommand("insertText", false, text);
+}
+
 // --- Geolocation (bonus) ---------------------------------------------------
 // Adding a location is reversible and low-risk, so it needs no
 // confirmation modal — just the browser's own native permission prompt.
@@ -311,7 +353,7 @@ function restoreDraftIntoForm(savedDraft) {
 
   titleInput.value = savedDraft.title;
   tagsInput.value = savedDraft.tags;
-  contentInput.value = savedDraft.content;
+  contentInput.innerHTML = savedDraft.content;
   core.updateSaveButtonState();
 }
 
@@ -343,6 +385,11 @@ export function init(coreArg, savedDraft) {
   titleInput.addEventListener("input", saveDraftFromForm);
   tagsInput.addEventListener("input", saveDraftFromForm);
   contentInput.addEventListener("input", saveDraftFromForm);
+
+  richTextToolbar.addEventListener("click", handleRichTextButtonClick);
+  contentInput.addEventListener("paste", handleContentPaste);
+  contentInput.addEventListener("keyup", updateRichTextToolbarState);
+  contentInput.addEventListener("mouseup", updateRichTextToolbarState);
 
   deleteButtons.forEach((button) => {
     button.addEventListener("click", openDeleteConfirmation);

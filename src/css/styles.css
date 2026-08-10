@@ -877,9 +877,53 @@ input[type="search"]::-webkit-search-cancel-button {
 }
 
 .tags-input::placeholder,
-.note-title-input::placeholder,
-.note-body-input::placeholder {
+.note-title-input::placeholder {
   color: var(--color-text-secondary);
+}
+
+.rich-text-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding-bottom: var(--spacing-100);
+  margin-bottom: var(--spacing-100);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.rt-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radius-sm);
+  color: var(--color-text-secondary);
+  font-size: var(--text-preset-5-font-size);
+}
+
+.rt-btn:hover {
+  background: var(--color-surface-secondary);
+}
+
+.rt-btn.is-active {
+  background: var(--color-surface-secondary);
+  color: var(--color-primary);
+}
+
+.rt-toolbar-divider {
+  width: 1px;
+  height: 20px;
+  margin: 0 4px;
+  background: var(--color-border);
+}
+
+/* .note-body-input is a contenteditable div, not a real form field, so
+   it has no native placeholder — this is the standard CSS-only stand-in:
+   show the placeholder text via ::before only while the div is empty. */
+.note-body-input:empty::before {
+  content: attr(data-placeholder);
+  color: var(--color-text-secondary);
+  pointer-events: none;
 }
 
 .note-body-input {
@@ -887,14 +931,27 @@ input[type="search"]::-webkit-search-cancel-button {
   min-height: 320px;
   border: none;
   background: transparent;
-  resize: none;
   font-family: inherit;
   font-size: var(--text-preset-5-font-size);
   font-weight: var(--font-weight-regular);
   line-height: var(--text-preset-5-line-height);
   letter-spacing: var(--text-preset-5-letter-spacing);
   color: var(--color-body-text);
-  white-space: pre-wrap;
+  outline: none;
+}
+
+/* execCommand("insertUnorderedList"/"insertOrderedList") inserts real
+   <ul>/<ol><li> markup — restore the markers the global reset (list-style:
+   none) strips from every <ul>/<ol> in the app, scoped to just this field
+   so nothing else (e.g. the sidebar's tag/category lists) is affected. */
+.note-body-input ul {
+  list-style: disc;
+  padding-left: 1.5em;
+}
+
+.note-body-input ol {
+  list-style: decimal;
+  padding-left: 1.5em;
 }
 
 .note-detail-footer {
